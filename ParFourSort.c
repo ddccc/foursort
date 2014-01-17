@@ -214,7 +214,7 @@ void quicksort0c(int N, int M, int depthLimit) {
 	if ( compareXY(A[pm], A[p0]) == 0 ) { duplicate = p0; };
 	if ( 0 <= duplicate ) {
 	  void quicksort0();
-	  cut3duplicates(N, M, duplicate, quicksort0, depthLimit);
+	  dflgm(N, M, duplicate, quicksort0, depthLimit);
 	  return;
 	}
       }
@@ -386,7 +386,7 @@ struct stack *ll;
 struct task * newTask();
 void addTaskSynchronized();
 
-void cut3duplicates();
+void dflgm();
 void cut2Pc(int N, int M, int depthLimit) {
   int L;
   Start:
@@ -403,7 +403,7 @@ void cut2Pc(int N, int M, int depthLimit) {
   depthLimit--;
 
   // Check for duplicates
-        int sixth = (M - N + 1) / 6;
+        int sixth = (L + 1) / 6;
         int e1 = N  + sixth;
         int e5 = M - sixth;
         int e3 = (N+M) / 2; // The midpoint
@@ -414,63 +414,34 @@ void cut2Pc(int N, int M, int depthLimit) {
         void *ae1 = A[e1], *ae2 = A[e2], *ae3 = A[e3], *ae4 = A[e4], *ae5 = A[e5];
 	void *t;
         // if (ae1 > ae2) { t = ae1; ae1 = ae2; ae2 = t; }
-	int r; void *duplicate = NULL;
-	r = compareXY(ae1, ae2);
-	if ( 0 == r ) duplicate = ae2; else                  // 1-2
-	  if ( 0 < r ) { t = ae1; ae1 = ae2; ae2 = t; }
-
-	r = compareXY(ae4, ae5);
-	if ( 0 == r ) duplicate = ae4; else                  // 4-5
-	  if ( 0 < r ) { t = ae4; ae4 = ae5; ae5 = t; }
-
-	r = compareXY(ae1, ae3);
-	if ( 0 == r ) duplicate = ae3; else                  // 1-3
-	  if ( 0 < r ) { t = ae1; ae1 = ae3; ae3 = t; }
-
-	r = compareXY(ae2, ae3);
-	if ( 0 == r ) duplicate = ae3; else                  // 2-3
-	  if ( 0 < r ) { t = ae2; ae2 = ae3; ae3 = t; }
-
-	r = compareXY(ae1, ae4);
-	if ( 0 == r ) duplicate = ae4; else
-	  if ( 0 < r ) { t = ae1; ae1 = ae4; ae4 = t; }      // 1-4
-
-	r = compareXY(ae3, ae4);
-	if ( 0 == r ) duplicate = ae3; else
-	  if ( 0 < r ) { t = ae3; ae3 = ae4; ae4 = t; }      // 3-4
-
-	r = compareXY(ae2, ae5);
-	if ( 0 == r ) duplicate = ae2; else
-	  if ( 0 < r ) { t = ae2; ae2 = ae5; ae5 = t; }      // 2-5
-
-	r = compareXY(ae2, ae3);
-	if ( 0 == r ) duplicate = ae3; else                  // 2-3
-	  if ( 0 < r ) { t = ae2; ae2 = ae3; ae3 = t; }
-
-	r = compareXY(ae4, ae5);                             // 4-5
-	if ( 0 == r ) duplicate = ae4; else
-	  if ( 0 < r ) { t = ae4; ae4 = ae5; ae5 = t; }
+	if ( 0 < compareXY(ae1, ae2) ) { t = ae1; ae1 = ae2; ae2 = t; } // 1-2
+	if ( 0 < compareXY(ae4, ae5) ) { t = ae4; ae4 = ae5; ae5 = t; } // 4-5
+	if ( 0 < compareXY(ae1, ae3) ) { t = ae1; ae1 = ae3; ae3 = t; } // 1-3
+	if ( 0 < compareXY(ae2, ae3) ) { t = ae2; ae2 = ae3; ae3 = t; } // 2-3
+	if ( 0 < compareXY(ae1, ae4) ) { t = ae1; ae1 = ae4; ae4 = t; } // 1-4
+	if ( 0 < compareXY(ae3, ae4) ) { t = ae3; ae3 = ae4; ae4 = t; } // 3-4
+	if ( 0 < compareXY(ae2, ae5) ) { t = ae2; ae2 = ae5; ae5 = t; } // 2-5
+	if ( 0 < compareXY(ae2, ae3) ) { t = ae2; ae2 = ae3; ae3 = t; } // 2-3
+	if ( 0 < compareXY(ae4, ae5) ) { t = ae4; ae4 = ae5; ae5 = t; } // 4-5
 	// ... and reassign
 	A[e1] = ae1; A[e2] = ae2; A[e3] = ae3; A[e4] = ae4; A[e5] = ae5;
 
-	if ( NULL != duplicate ) { // found a duplicate thus delegate
-	  int duplicatex = 0;
-	  if ( duplicate == ae4 ) { duplicatex = e4; } else
-	  if ( duplicate == ae3 ) { duplicatex = e3; } else
-	  if ( duplicate == ae2 ) { duplicatex = e2; } else
-	  if ( duplicate == ae1 ) { duplicatex = e1; } else
-	  if ( duplicate == ae5 ) { duplicatex = e5; } else
-	    { goto skip; } // defensive
-	  void cut2Pc();
-	  cut3duplicates(N, M, duplicatex, cut2Pc, depthLimit);
-	  return;
-	}
- skip:
 	// Fix end points
 	if ( compareXY(ae1, A[N]) < 0 ) iswap(N, e1, A);
 	if ( compareXY(A[M], ae5) < 0 ) iswap(M, e5, A);
 
 	register void *T = ae3; // pivot
+
+	// check Left label invariant
+	// if ( T <= A[N] || A[M] < T ) {
+	if ( compareXY(T, A[N]) <= 0 || compareXY(A[M], T) < 0) {
+	   // give up because cannot find a good pivot
+	   // dflgm is a dutch flag type of algorithm
+	   void cut2Pc();
+	   dflgm(N, M, e3, cut2Pc, depthLimit);
+	   return;
+	 }
+
 	register int I, J; // indices
 	register void *AI, *AJ; // array values
 
@@ -481,21 +452,23 @@ void cut2Pc(int N, int M, int depthLimit) {
 
 	// The left segment has elements < T
 	// The right segment has elements >= T
-
   Left:
-	 I = I + 1;
-	 AI = A[I];
-	 // if (AI < T) goto Left;
-	 if ( compareXY( AI,  T) < 0 ) goto Left;
+	// I = I + 1;
+	// AI = A[I];
+	// if (AI < T) goto Left;
+	// if ( compareXY(AI,  T) < 0 ) goto Left;
+	while ( compareXY(A[++I],  T) < 0 ); AI = A[I];
   Right:
-	 J = J - 1;
-	 AJ = A[J];
-	 // if ( T <= AJ ) goto Right;
-	 if ( compareXY( T, AJ) <= 0 ) goto Right;
-	 if ( I < J ) {
-	   A[I] = AJ; A[J] = AI;
-	   goto Left;
-	 }
+	// J = J - 1;
+	// AJ = A[J];
+	// if ( T <= AJ ) goto Right;
+	// if ( compareXY(T, AJ) <= 0 ) goto Right;
+	while ( compareXY(T, A[--J]) <= 0 ); AJ = A[J];
+	if ( I < J ) {
+	  A[I] = AJ; A[J] = AI;
+	  goto Left;
+	}
+	// Tail iteration  
   	 if ( (I - N) < (M - J) ) { // smallest one first
 	   // cut2Pc(N, J, depthLimit);
 	   // N = I; 
@@ -510,1237 +483,418 @@ void cut2Pc(int N, int M, int depthLimit) {
 	 goto Start;
 } // (*  OF cut2P; *) ... the brackets reminds that this was Pascal code
 
-/* deadx is NOT used for sorting.  It can be employed for 
-   a test to invoke cut3duplicates */
-void deadxc();
-void deadx(int N, int M) {
-  // printf("deadx N: %d M: %d\n", N, M);
-  int L = M - N;
-  if ( L <= 1 ) return;    
-  int depthLimit = 2 * floor(log(L));
-  deadxc(N, M, depthLimit);
-} // end deadx
 
-/* deadxc is also NOT used for sorting.  It is employed for 
-   a test to invoke cut3duplicates */
-void deadxc(int N, int M, int depthLimit) {
-  if ( depthLimit <= 0 ) {
+// Dutch flag type function that initializes the middle segment in the middle
+void dflgm(int N, int M, int pivotx, void (*cut)(), int depthLimit) {
+  // printf("dflgm N %i M %i pivotx %i dl %i\n", N,M,pivotx,depthLimit);  
+  /*
+    Simple version of partitioning with: L/M/R
+    L < pivot, M = pivot, R > pivot
+   */
+  register int i, j, lw, up; // indices
+  register void* p3; // pivot
+  register void* ai, *aj, *am;
+  register int r; // comparison output 
+  // int z; // for tracing
+
+  // /*
+  if ( depthLimit <= 0 ) { // avoid quadradic explosion
     heapc(A, N, M);
     return;
   }
-  int L = M - N;  
-  if ( L < cut3Limit ) { 
+
+  int L = M - N;
+  // delegated small segments
+  // if ( L < cut3xLimit ) {
+  if ( L < 100 ) {
     quicksort0c(N, M, depthLimit);
     return;
   }
-  depthLimit--;
 
-    int pivotx;
-    int midpointx = (M+N)/2;
-    if ( L <= 30 ) { // being defensive
-      pivotx = med(A, N, midpointx, M, compareXY);
-    } else {
-      int step = L * 0.1;
-      int P = med(A, N +   step, N + 2*step, N + 3*step, compareXY);
-      int Q = med(A, midpointx - step, midpointx, midpointx + step, compareXY);
-      int R = med(A, M - 3*step, M - 2*step, M - step, compareXY);
-      pivotx = med(A, P, Q, R, compareXY);
-    }
-
-    void deadxc();
-    cut3duplicates(N, M, pivotx, deadxc, depthLimit);
-} // end deadxc
-
-/* Three partition sorting with a single pivot p
-   Left elements are less than the pivot
-   Middle elements are equal to the pivot
-   Right elements are greater than the pivot
-   Only middle elements are guaranteed to be non-empty
-   This module is invoked on 'pathological' inputs */
-void cut3duplicates(int N, int M, int pivotx, void (*cut)(), int depthLimit) {
-  // pivotx is the index inside [N,M] for pivot p.  *** DO NOT CHANGE ***
-  register void *p = A[pivotx]; // pivot
-  // indices 
-  register int i, j, lw, up;
-  // values
-  register void *x, *y, *AM;
-  register int r; // used for capturing output of comparison operation
-
-  // initialize end points
-  x = A[N]; AM = A[M];
-  A[N] = A[M] = p;
-
-  /* We employ dispose/whack-a-mole. We know in which partition element x 
-     should be.  Find a close, undecided position where x should go.  
-     Store its content in y.  Drop x (simplified).  Set x to y and repeat. 
-   */
-  // initialize running indices
-  i = N;
-  j = M;
-  //  if ( x < p ) goto StartL;
-  r = compareXY(x, p);
-  if ( r < 0 ) goto StartL;
-  //  if ( p < x ) goto StartR;
-  if ( r > 0 ) goto StartR;
-  goto CreateMiddle;
-
- StartL:
-  /*
-    |o---]-----------------------------[---o|
-    N    i                             j    M
-    x -> L
-   */
-    i++;
-  y = A[i];
-  r = compareXY(y, p);
-  if ( r < 0 ) goto StartL; 
-  // if ( p < y ) { 
-  if ( 0 < r ) { 
-    if ( i < j ) {
-      A[i] = x;
-      x = y;
-      goto StartR;
-    }
-    // gap closed; i==j 
+  i = N; j = M; lw = pivotx-1; up = pivotx+1;
     /*
-    |o-----------][----------------------o|
-    N             i                       M
-    x -> L        j
-   */
-    A[N] = x;
-    // AM must be p
-    A[M] = A[j];
-    A[j] = AM;
-    goto Finish;
-  }
-  // y = p -> M
-  if ( i < j ) {
-    A[i] = x;
-    x = y;
-    goto CreateMiddle;
-  }
-  /* We have:
-     x -> L
-     y -> M
-     i = j
-     N+i <= k < i -> A[k] < p
-     i = j <= k < M -> p < A[k]
-     Therefore: 
-     x must go to A[N] and 
-     p = A[M], the only location where y can go.
-     Hence: i = j = M 
-     This cannot happen under normal use because there must be
-     more than one element equal to p when used by the other 
-     members of Par/SixSort
-
-    |o------------------------------------]o|
-    N                                      M=i=j
-    x -> L
-   */
-  A[N] = x;
-  // AM must be p hence the next assignment is defensive
-  A[M] = AM;
-  i--;
-  goto FinishL;
-
- StartR:
-  /*
-    |o---]-----------------------------[---o|
-    N    i                             j    M
-    x -> R
-   */
-  j--;
-  y = A[j];
-  r = compareXY(y, p);
-  if ( 0 < r ) goto StartR;
-  if ( r < 0 ) {
-    if ( i < j ) {
-      A[j] = x;
-      x = y;
-      goto StartL;
-    }
-    // gap closed; i==j
-    /*
-    |o-----------][----------------------o|
-    N            i                        M
-    x -> R       j
-   */
-    A[M] = x;
-    // AM must be p
-    A[N] = A[i]; A[i] = AM;
-    goto Finish;
-  }
-  // y -> M
-  if ( i < j ) {
-    A[j] = x;
-    x = y;
-    goto CreateMiddle;
-  }
-  /* We have:
-     x -> R
-     y -> M
-     i = j
-     N+i <= k <= i -> A[k] < p
-     i = j < k < M -> p < A[k]
-     Therefore: 
-     x must go to A[M] and 
-     p = A[N], the only location where y can go.
-     Hence: i = j = N
-     This cannot happen under normal use because there must be
-     more than one element equal to p when used by the other 
-     members of Par/SixSort.
-
-    |o][-----------------------------------o|
-    N=i=j                                   M
-    x -> R
-   */
-  A[M] = x;
-  // AM must be p
-  A[N] = AM;
-  j++;
-  goto FinishR;
-
- CreateMiddle:
-  /*
-    |o---]-----------------------------[---o|
-    N    i                             j    M
-    x -> M
-   */
-  if ( i+1 == j ) {
-    /*
-    |o--------------][---------------------o|
-    N               ij                      M
-    x -> M
+      |---)-----(----)-------(----|
+      N   i     lw  up       j    M
+      
+      N <= i < lw <= up < j <= M
+      N <= x < i ==> A[x] < p3
+      lw < x < up  ==> A[x] = p3
+      j < x <= M & ==> p3 < A[x] 
     */
-    // if ( AM < p ) {
-    r = compareXY(AM, p);
-    if ( r < 0 ) {
-      A[N] = AM;
-      A[M] = A[j]; A[j] = x;
-      i++;
-      goto Finish;
-    } 
-    //    if ( p < AM ) {  
+  p3 = A[pivotx]; // There IS a middle value somewhere:
+
+ L0:
+   /*
+     |---)-----(----)-------(----|
+     N   i     lw  up       j    M
+   */
+
+  // while ( A[i] < p3 ) i++;
+  while ( (r = compareXY(A[i], p3)) < 0 ) i++;
+  if ( lw < i ) {
+    i--;
+    if ( N < i ) goto leftClosed;
+    i = N;
+    goto leftEmpty;
+  }
+  ai = A[i]; // p3 <= ai
+  // if ( p3 < ai ) goto LaiR; 
+  if ( 0 < r ) goto LaiR; 
+  goto LaiM;
+
+ LaiR:
+   /*
+      |---)-----(----)-------(----|
+      N   i     lw  up       j    M
+      ai -> R
+   */
+  // while ( p3 < A[j] ) j--;
+  while ( (r = compareXY(p3, A[j])) < 0 ) j--;
+  aj = A[j]; // aj <= p3
+  // if ( aj < p3 ) { // aj -> L
+  if ( 0 < r ) {
+    A[i] = aj; A[j] = ai; 
+    goto L1; }
+  // aj -> M
+  if ( j <= up ) {
+    if ( j == M ) goto emptyRightaiR;
+    j++; goto rightClosedaiR;
+  }
+  // up < j
+  am = A[up];
+  // if ( am < p3 ) { // am -> L
+  if ( (r = compareXY(am, p3)) < 0 ) {
+    A[i] = am; A[up++] = aj; A[j] = ai;
+    goto L1; 
+  }
+  // if ( p3 < am ) { // am -> R
+  if ( 0 < r ) {
+    A[up++] = aj; A[j--] = am; 
+    if ( j < up ) { j++; goto rightClosedaiR; }
+    // up <= j
+    goto LaiR; // info loss ...
+  }
+  // am -> M
+  up++;
+  goto LaiR;
+
+ LaiM:
+   /*
+      |---)-----(----)-------(----|
+      N   i     lw  up       j    M
+      ai -> M
+   */
+  // while ( N < lw && A[lw] == p3 ) lw--;
+  while ( N < lw && (r = compareXY(A[lw], p3)) == 0 ) lw--;
+  if ( N == lw ) { goto leftEmpty; }
+  // N < lw
+  if ( i == lw ) { i--; goto leftClosed; }
+  // i < lw
+  am = A[lw];
+  // if ( am < p3 ) { // am -> L
+  if ( r < 0 ) {
+    A[i++] = am; A[lw--] = ai;
+    if ( lw < i ) { i--; goto leftClosed; }
+    goto L0; // info loss
+  }
+  // am -> R
+  // while ( p3 < A[j] ) j--;
+  while ( (r = compareXY(p3, A[j])) < 0 ) j--;
+  aj = A[j]; // aj <= p3
+  // if ( aj < p3 ) { // aj -> L
+  if ( 0 < r ) {
+    A[i] = aj; A[lw--] = ai; A[j] = am;
+    goto L1;
+  }
+  // aj -> M
+  if ( j < up ) {
+    A[lw--] = aj; A[j] = am;
+    goto rightClosedaiM;
+  }
+  // up <= j
+  A[lw--] = aj; A[j--] = am;
+  if ( j < up ) {
+    j++; // right side closed
+    if ( i == lw ) { // left side closed
+      i--; goto done;
+    }
+    goto rightClosedaiM;
+  }
+  // up <= j
+  if ( i == lw ) {
+    i--; goto leftClosed;
+  }
+  goto LaiM; // info loss
+  
+ leftEmpty:
+   /*
+      |-------------)-------(----|
+    N=i             up      j    M
+   */
+  // while ( up <= M && A[up] == p3 ) up++;
+  while ( up <= M && (r = compareXY(A[up], p3)) == 0 ) up++;
+  if ( M < up ) return; // !!
+  if ( j < up ) { j++; goto done; }
+  // up <= j
+  am = A[up];
+  // if ( am < p3) { // am -> L
+  if ( r < 0 ) {
+    A[up++] = A[N]; A[N] = am; 
+    if ( j < up ) { j++; goto done; }
+    // up <= j
+    goto leftClosed;
+  }
+  // am -> R
+  // while ( p3 < A[j] ) j--;
+  while ( (r = compareXY(p3, A[j])) < 0 ) j--;
+  if ( j < up ) { j++; goto done; }
+  // up < j
+  aj = A[j]; // aj <= p3
+  // if ( aj < p3 ) { // aj -> L
+  if ( 0 < r ) {
+    A[j--] = am; A[up++] = A[N]; A[N] = aj;
+    if ( j < up ) { j++; goto done; }
+    goto leftClosed;
+  }
+  // aj -> M
+  A[j--] = am; A[up++] = aj;
+  if ( j < up ) { j++; goto done; }
+  goto leftEmpty;
+  
+ emptyRightaiR:
+   /*
+      |---)-----(---------------|
+      N   i     lw              j=M
+      ai -> R
+   */
+  // while ( A[lw] == p3 ) lw--;
+  while ( (r = compareXY(A[lw], p3)) == 0 ) lw--;
+  am = A[lw];
+  // if ( p3 < am ) { // am -> R
+  if ( 0 < r ) {
+    if ( i == lw ) {
+      A[i] = A[M]; A[M] = ai; i--; goto done;
+    }
+    // i < lw
+    A[lw--] = A[M]; A[M] = am; goto rightClosedaiR;
+  }
+  // am -> L
+  A[i++] = am; A[lw--] = A[M]; A[M] = ai;
+  if ( lw < i ) { i--; goto done; }
+  goto rightClosed;
+
+  L1: 
+  /*
+    |---]-----(----)-------[----|
+    N   i     lw  up       j    M
+  */
+  // while ( A[++i] < p3 );
+  while ( (r = compareXY(A[++i], p3)) < 0 );
+  if ( lw < i ) { i--; j--; goto leftClosed; }
+  // i <= lw
+  ai = A[i];
+  // if ( p3 < ai ) { // ai -> R
+  if ( 0 < r ) {
+  L1Repeat:
+    // while ( p3 < A[--j] );
+    while ( (r = compareXY(p3, A[--j])) < 0 );
+    if ( j < up ) { j++; goto rightClosedaiR; }
+    // up <= j
+    aj = A[j];
+    // if ( aj < p3 ) { // aj -> L
     if ( 0 < r ) {
-      A[M] = AM;
-      A[N] = A[i]; A[i] = x;
-      j--;
-      goto Finish;
+      A[i] = aj; A[j] = ai; 
+      goto L1;
     }
-    // p = AM
-    A[N] = A[i]; A[i] = x; 
-    A[M] = A[j]; A[j] = AM; 
-    goto Finish;
+    // aj -> M
+    // while ( A[up] == p3 ) up++;
+    while ( (r = compareXY(A[up], p3)) == 0 ) up++;
+    if ( j < up ) { j++; goto rightClosedaiR; }
+    // up <= j
+    am = A[up];
+    // if ( am < p3 ) { // am -> L
+    if ( r < 0 ) {
+      A[i] = am; A[up++] = aj; A[j] = ai;
+      if ( j < up ) { i++; goto rightClosed; }
+      goto L1;
+    }
+    // am -> R
+    A[up++] = aj; A[j] = am;
+    if ( j < up ) { goto rightClosedaiR; }
+    // up <= j
+    goto L1Repeat;
   }
-  lw = (i+j)/ 2;
-  up = lw+1;
-  y = A[lw];
-  A[lw] = x;
-  x = y;
-  lw--;
-
-  /*
-    |o---]-----------+[-]+-------------[---o|
-    N    i          lw   up            j    M
-   x -> ?
-   */
-  // if ( x < p ){
-  r = compareXY(x, p);
-
+  // ai -> M
+ L1Repeat2:
+  // while ( A[lw] == p3 ) lw--;
+  while ( (r = compareXY(A[lw], p3)) == 0 ) lw--;
+  if ( lw < i ) { i--; j--; goto leftClosed; }
+  // i < lw
+  am = A[lw]; 
+  // if ( am < p3 ) { // am -> L
   if ( r < 0 ) {
-    goto LLgMgRL;
+    A[i] = am; A[lw--] = ai;
+    if ( lw < i ) { i--; j--; goto leftClosed; } 
+    goto L1;
   }
-  // if ( p < x ) {
-  if ( 0 < r ) {
-    goto LLgMgRR;
+  // am -> R
+  // while ( p3 < A[--j] );
+  while ( (r = compareXY(p3, A[--j])) < 0 );
+  if ( j < up ) {
+    A[lw--] = A[j]; A[j] = am; goto rightClosedaiM;
   }
-  goto LLgMgRM1;
+  // up <= j
+  aj = A[j];
+  // if ( aj < p3 ) { // aj -> L
+  if  ( 0 < r ) {
+    A[i] = aj; A[lw--] = ai; A[j] = am;
+    if ( lw < i ) { j--; goto leftClosed; }
+    goto L1;
+  }
+  // aj -> M
+  A[lw--] = aj; A[j] = am; 
+  goto L1Repeat2;
 
- LLgMgRL:
-  /*
-    |o---]-----------+[-]+-------------[---o|
-    N    i          lw   up            j    M
-    x -> L
+ leftClosed: 
+   /* 
+      |---]----------)-------(----|
+      N   i          up      j    M
    */
-  i++;
-  y = A[i];
-  r = compareXY(y, p);
-  if ( r < 0 ) goto LLgMgRL;
+  // while ( p3 < A[j] ) j--;
+  while ( (r = compareXY(p3, A[j])) < 0 ) j--;
+  if ( j < up ) { j++; goto done; }
+  // up <= j
+  aj = A[j]; // aj <= p3
+  // if ( aj < p3 ) { // aj -> L
   if ( 0 < r ) {
-    A[i] = x;
-    x = y;
-    goto LLgMgRR;
+    repeatM:
+    // while ( A[up] == p3 ) up++;
+    while ( (r = compareXY(A[up], p3)) == 0 ) up++;
+    am = A[up];
+    // if ( p3 < am ) { // am -> R
+    if ( 0 < r ) {
+      A[j--] = am; A[up++] = A[++i]; A[i] = aj;
+      if ( j < up ) { j++; goto done; }
+      goto leftClosed;
+    }
+    // am -> L
+    if ( up == j ) { A[j++] = A[++i]; A[i] = am; goto done; }  
+    // up < j
+    A[up++] = A[++i]; A[i] = am;
+    goto repeatM;
   }
-  // y -> M
-  if ( i <= lw ) {
-    A[i] = x;
-    x = y;
-    goto LLgMgRM1;
+  // aj -> M
+  repeatM2:
+  // while ( up <= j && A[up] == p3 ) up++;
+  while ( up <= j && (r = compareXY(A[up], p3)) == 0 ) up++;
+  if ( j <= up ) { j++; goto done; }
+  // up < j
+  am = A[up];
+  // if ( p3 < am ) { // am -> R
+  if ( 0 < r ) {
+    A[j--] = am; A[up++] = aj;
+    if ( j < up ) { j++; goto done; }
+    goto leftClosed;
   }
-  // left gap closed
-  /*
-    |o---------][------]+-------------[---o|
-    N           i       up            j    M
-    x -> L
+  // am -> L
+  A[up++] = A[++i]; A[i] = am; 
+  goto repeatM2;
+
+ rightClosed:
+   /*
+      |---)-----(-----------[----|
+      N   i    lw           j    M
    */
-  goto LLMgRL;
+  // while ( A[i] < p3 ) i++;
+  while ( (r = compareXY(A[i], p3)) < 0 ) i++;
+  if ( lw < i ) { i--; goto done; }
+  // i <= lw
+  ai = A[i]; // p3 <= ai
+  // if ( p3 < ai ) { // ai -> R
+  if ( 0 < r ) {
+    goto rightClosedaiR;
+  }
+  // ai -> M
+  // goto rightClosedaiM;
+
+ rightClosedaiM:
+  // while ( i <= lw && A[lw] == p3 ) lw--;
+  while ( i <= lw && (r = compareXY(A[lw], p3)) == 0 ) lw--;
+  if ( lw < i ) { i--; goto done; }
+  // i <= lw
+  am = A[lw];
+  // if ( p3 < am ) { // am -> R
+  if ( 0 < r ) {
+    A[lw--] = A[--j]; A[j] = am; 
+    if ( lw < i ) { i--; goto done; }
+    goto rightClosedaiM;
+  }
+  // am -> L
+  A[i++] = am; A[lw--] = ai;
+  if ( lw < i ) { i--; goto done; }
+  goto rightClosed;
+
+ rightClosedaiR: 
+   /*
+      |---)-----(-----------[----|
+      N   i    lw           j    M
+      ai -> R
+   */
+  // while ( A[lw] == p3 ) lw--;
+  while ( (r = compareXY(A[lw], p3)) == 0 ) lw--;
+  if ( i == lw ) {
+    A[i--] = A[--j]; A[j] = ai; goto done;
+  }
+  // i < lw
+  am = A[lw];
+  // if ( am < p3 ) { // am -> L
+  if ( r < 0 ) {
+    A[i++] = am; A[lw--] = A[--j]; A[j] = ai;
+    if ( lw < i ) { i--; goto done; }
+    // i <= lw
+    goto rightClosed;
+  }
+  // am -> R
+  A[lw--] = A[--j]; A[j] = am; goto rightClosedaiR;
   
- LLgMgRR:
-  /*
-    |o---]-----------+[-]+-------------[---o|
-    N    i          lw   up            j    M
-    x -> R
-   */
-  j--;
-  y = A[j];
-  r = compareXY(p, y );
-  if ( r < 0 ) goto LLgMgRR;
-  if ( 0 < r ) {
-    A[j] = x;
-    x = y;
-    goto LLgMgRL;
-  }
-  // y -> M
-  if ( up <= j ) {
-    A[j] = x;
-    x = y;
-    goto LLgMgRM2;
-  }
-  // right gap closed
-  /*
-    |o---]-----------+[---------][---------o|
-    N    i          lw          j           M
-    x -> R
-   */
-  goto LLgMRR;
-  
- LLgMgRM1:
-  /*
-    |o---]-----------+[-]+-------------[---o|
-    N    i          lw   up            j    M
-    x -> M
-   */
-  y = A[lw];
-  r = compareXY(p, y);
-  if ( r < 0 ) {
-    A[lw] = x;
-    x = y;
-    lw--; 
-    goto LLgMgRR;
-  } 
-  if ( r == 0 ) {
-   if ( i < lw ) {
-      lw--;
-      goto LLgMgRM2;
-    }
-    goto LMgRM;
-  }
-  // y -> L
-  if ( i < lw ) {
-    A[lw] = x;
-    x = y;
-    lw--;
-    goto LLgMgRL;
-  }
-  // left gap closed
-  i++; 
-  goto LLMgRM;
-    
- LLgMgRM2:
-  /*
-    |o---]-----------+[-]+-------------[---o|
-    N    i          lw   up            j    M
-    x -> M
-   */
-  y = A[up];
-  r = compareXY(y, p);
-  if ( r < 0 ) {
-    A[up] = x;
-    x = y;
-    up++;
-    goto LLgMgRL;
-  }
-  if ( r == 0 ) {
-    if ( up < j ) {
-      up++;
-      goto LLgMgRM1;
-    }
-    goto LLgMM;
-  }
-  // y -> R
-  if ( up < j ) {
-    A[up] = x;
-    x = y;
-    up++;
-    goto LLgMgRR;
-  }
-  // right gap closed
-  j--; 
-  goto LLgMRM;
-
-  // left gap closed
- LLMgRL:  
-  /*
-    |o---------][------]+-------------[---o|
-    N           i       up            j    M
-    x -> L
-  */
-  y = A[up];
-  r = compareXY(y, p);
-  if ( r < 0 ) {
-    A[up] = A[i]; A[i] = y;
-    up++; i++;
-    goto LLMgRL;
-  }
-  // if ( y == p ) {
-  if ( r == 0 ) { 
-    if ( up == M ) {
-   /*
-    |o---------][-------------------]o|
-    N           i                     M
-    x -> L
-   */
-      A[N] = x;
-      if ( compareXY(p, AM) <= 0 ) {
-	A[M] = AM;
-	i--;
-	goto FinishL;
-      }
-      /*
-      // if ( p == AM ) { 
-      if ( compareXY(p, AM) == 0 ) { 
-	A[M] = AM;
-	i--;
-	goto FinishL;
-      }
-      */
-      // compareXY(AM, p) < 0
-      A[M] = A[i]; A[i] = AM;
-      goto FinishL;
-    }
-    up++;
-    goto LLMgRL;
-  }
-  // y -> R
-  if ( up < j ) {
-    A[up] = A[i]; A[i] = x;
-    x = y;
-    i++; up++;
-    goto LLMgRR;
-  }
-  // right gap closed also
-  /*
-    |o---------][------][-----------------o|
-    N           i       j                  M
-    x -> L
-   */
-  // up == j; A[j] == y 
-  r = compareXY(p, AM);
-  if ( r < 0 ) {
-    A[N] = x; A[M] = AM;
-    j--;
-    goto Finish;
-  }
-  if ( r == 0 ) {
-    A[N] = x; A[M] = y; A[j] = AM;
-    goto Finish;
-  }
-  // AM -> L and x -> L
-  A[M] = y; A[j] = A[i];
-  // if ( x <= AM ) { 
-  if ( compareXY(x, AM ) <= 0 ) { 
-    A[N] = x; 
-    A[i] = AM;
-  } else {
-    A[N] = AM; 
-    A[i] = x;
-  }
-  i++;
-  goto Finish;
-
- LLMgRM:
-  /*
-    |o---------][------]+-------------[---o|
-    N           i       up            j    M
-    x -> M
-   */
-  y = A[up];
-  r = compareXY(y, p);
-  if ( r < 0 ) {
-    A[up] = A[i]; A[i] = y; 
-    i++; up++;
-    goto LLMgRM;
-  }
-  if ( r == 0 ) {
-    if ( up == M ) { // R empty 
-      /*
-    |o---------][-------------------]o|
-    N           i                     M
-    x -> M
-      */
-      if ( compareXY(AM, p) < 0 ) {
-	A[N] = AM;
-	A[M] = x;
-	i--;
-	goto FinishL;
-      }
-      /*
-      if ( compareXY(p, AM) < 0 ) {
-	A[M] = AM;
-	i--;
-	A[N] = A[i]; A[i] = x;
-	i--;
-	goto FinishL;
-      }
-      */
-      A[M] = AM;
-      i--;
-      A[N] = A[i]; A[i] = x;
-      i--;
-      goto FinishL;
-    }
-    up++;
-    goto LLMgRM;
-  }
-  // y -> R
-  if ( up < j ) {
-    A[up] = x;
-    x = y;
-    up++;
-    goto LLMgRR;
-  }
-  // right gap closed also
-  /*
-    |o---------][------][-----------------o|
-    N           i       j                  M
-    x -> M
-   */
-  // up == j; A[j] == y 
-  r = compareXY(p, AM);
-  if ( r < 0 ) {
-    A[M] = AM;
-    i--;
-    A[N] = A[i]; A[i] = x;
-    j--;
-    goto Finish;
-  } 
-  if ( 0 < r ) {
-    A[N] = AM; A[M] = y; A[j] = x;
-    goto Finish;
-  }
-  // AM -> M
-  i--;
-  A[N] = A[i]; A[i] = x;
-  A[M] = y; A[j] = AM;
-  goto Finish;
-
- LLMgRR:
-  /*
-    |o---------][------]+-------------[---o|
-    N           i       up            j    M
-    x -> R
-  */
-  j--;
-  y = A[j];
-  r = compareXY(p, y);
-  if ( r < 0 ) goto LLMgRR;
-  if ( 0 < r ) {
-    A[j] = x;
-    x = y;
-    goto LLMgRL;
-  }
-  // y -> M
-  if ( up <= j ) {
-    A[j] = x;
-    x = y;
-    goto LLMgRM;
-  }
-  // right gap closed also   y = A[j]
-  /*
-    |o---------][------][-----------------o|
-    N           i      j                   M
-    x -> R
-   */
-  A[M] = x;
-  r = compareXY(AM, p);
-  if ( r < 0 ) {
-    A[N] = AM; 
-    goto Finish;
-  }
-  if ( r == 0 ) {
-    i--;
-    A[N] = A[i]; A[i] = AM;
-    goto Finish;
-  }
-  // AM -> R
-  i--;
-  A[N] = A[i]; A[i] = y; A[j] = AM;
-  j--; 
-  goto Finish;
-
-  // right gap closed
- LLgMRR:
-  /*
-    |o---]-----------+[---------][---------o|
-    N    i          lw          j           M
-    x -> R
-  */
-  y = A[lw];
-  r = compareXY(p, y);
-  if ( r < 0 ) {
-    A[lw] = A[j]; A[j] = y;
-    lw--; j--;
-    goto LLgMRR;    
-  }
-  if ( r == 0 ) {
-    if ( N == lw ) { // L is empty 
-      /*
-    |o[-----------------------][---------o|
-    N                         j           M
-    x -> R
-      */
-      A[M] = x;
-      if ( compareXY(AM, p) <= 0 ) {
-	A[N] = AM;
-	j++;
-	goto FinishR;
-      }
-      /*
-      if ( compareXY(p, AM) == 0 ) {
-	A[N] = AM;
-	j++;
-	goto FinishR;
-      }
-      */
-      // compareXY(p, AM) < 0
-      A[N] = A[j]; A[j] = AM;
-      goto FinishR;
-    }
-    lw--;
-    goto LLgMRR; 
-  }
-  // y -> L
-  if ( i < lw ) {
-    A[lw] = A[j]; A[j] = x;
-    x = y;
-    lw--; j--;
-    goto LLgMRL;
-  }
-  // left gap closed also
-  /*
-    |o---][---------------------][---------o|
-    N    i                      j           M
-    x -> R
-  */
-  // y == A[lw] == A[i]
-  A[M] = x;
-  r = compareXY(AM, p);
-  if ( r < 0 ) {
-    A[N] = AM;
-    i++;
-    goto Finish;
-  }
-  if ( r == 0 ) {
-    A[N] = y; A[i] = AM;
-    goto Finish;
-  }
-  // AM -> R
-  A[N] = y; A[i] = A[j]; A[j] = AM;
-  j--; 
-  goto Finish;
-
- LLgMRM:
-  /*
-    |o---]-----------+[---------][---------o|
-    N    i          lw          j           M
-    x -> M
-  */
-  y = A[lw];
-  r = compareXY(p, y);
-  if ( r < 0 ) {
-    A[lw] = A[j]; A[j] = y;
-    lw--; j--;
-    goto LLgMRM;    
-  }
-  if ( r == 0 ) {
-    if ( N == lw ) { // L empty 
-      /*
-    |o[-----------------------][---------o|
-    N                         j           M
-    x -> M
-      */
-      if ( compareXY(AM, p) <= 0 ) {
-	A[N] = AM;
-	j++;
-	A[M] = A[j];
-	A[j] = x;
-	j++;
-	goto FinishR; 
-      }
-      /*
-      // if ( p == AM ) {
-      if ( compareXY(p, AM) == 0 ) { 
-	A[N] = AM;
-	j++;
-	A[M] = A[j];
-	A[j] = x;
-	j++;
-	goto FinishR; 
-      }
-      */
-      // compareXY(p, AM) < 0
-      A[M] = AM; A[N] = x;
-      j++;
-      goto FinishR; 
-    }
-    lw--;
-    goto LLgMRM; 
-  }
-  // y -> L
-  if ( i < lw ) {
-    A[lw] = x;
-    x = y;
-    lw--;
-    goto LLgMRL;
-  }
-  // left gap closed also
-  /*
-    |o---][---------------------][---------o|
-    N    i                      j           M
-    x -> M
-  */
-  // y == A[lw] == A[i]
-  r = compareXY(p, AM);
-  if ( r < 0 ) {
-    A[M] = AM; 
-    A[N] = y; A[i] = x;
-    goto Finish;
-  }
-  if ( 0 < r ) {
-    A[N] = AM; 
-    j++;
-    A[M] = A[j]; A[j] = x;
-    i++;
-    goto Finish;
-  }
-  // AM == p
-  A[N] = y; A[i] = x;
-  j++;
-  A[M] = A[j]; A[j] = AM;
-  goto Finish;
-
- LLgMRL:
-  /*
-    |o---]-----------+[---------][---------o|
-    N    i          lw          j           M
-    x -> L
-   */
-  i++;
-  y = A[i];
-  r = compareXY(y, p);
-  if ( r < 0 ) goto LLgMRL;
-  if ( 0 < r ) {
-    A[i] = x;
-    x = y;
-    goto LLgMRR;
-  }
-  // y -> M
-  if ( i <= lw ) {
-    A[i] = x;
-    x = y;
-    goto LLgMRM;  
-  }
-  // left gap closed also  y = A[i];
-   /*
-    |o---][----------------------][---------o|
-    N     i                      j           M
-    x -> L
-   */
-  A[N] = x;
-  r = compareXY(p, AM);
-  if ( r < 0 ) { 
-    A[M] = AM;
-    goto Finish;
-  }
-  if ( r == 0 ) {
-    j++;
-    A[M] = A[j]; A[j] = AM;
-    goto Finish;
-  }
-  // AM -> L
-  j++;
-  A[M] = A[j]; A[j] = y; A[i] = AM;
-  i++;
-  goto Finish;
-
- LMgRM:
-   /*
-    |o[---------------]+-------------[---o|
-    N                  up            j    M
-    x -> M
-   */
-  y = A[up];
-  r = compareXY(y, p);
-  if ( r < 0 ) { // N == i 
-    i++;
-    A[up] = A[i]; A[i] = y;
-    i++; up++;
-    goto LLMgRM;
-  }
-  if ( r == 0 ) {
-    if ( up == M ) {
-   /*
-    |o[----------------------------]o|
-    N                                M
-    x -> M
-   */
-      if ( compareXY(AM, p) <= 0 ) {
-	A[N] = AM; A[M] = x;
-	goto Finish0;
-      }
-      /*
-      if ( compareXY(p, AM) == 0 ) {
-	A[N] = AM; A[M] = x;
-	goto Finish0;
-      }
-      */
-      // compareXY(p, AM) < 0
-      A[N] = x; A[M] = AM;
-      goto Finish0;
-    }
-    up++;
-    goto LMgRM;
-  }
-  // compareXY(p, y ) < 0
-  if ( up < j ) {
-    A[up] = x;
-    x = y;
-   /*
-    |o[---------------]+-------------[---o|
-    N                  up            j    M
-    x -> R
-   */
-    goto LMgRR;
-  }
-  // right gap closed  y = A[up] = A[j] -> R
-  /*
-    |o[-----------------------------][---o|
-    N                                j    M
-    x -> M
-   */
-  if ( compareXY(AM, p) <= 0 ) {
-    A[N] = AM;
-    A[M] = y; A[j] = x;
-    j++;
-    goto FinishR;
-  }
-  /*
-  if ( compareXY(AM, p) < 0 ) {
-    A[N] = AM;
-    A[M] = A[j]; A[j] = x;
-    j++;
-    goto FinishR;
-  }
-  if ( compareXY(p, AM) == 0 ) {
-    A[N] = AM;
-    A[M] = A[j]; A[j] = x;
-    j++;
-    goto FinishR;
-  }
-  */
-  // AM -> R
-  A[N] = x; A[M] = AM;
-  goto FinishR;
-
- LLgMM:
-   /*
-    |o---]-----------+[------------------]o|
-    N    i          lw                     M
-    x -> M
-   */
-  y = A[lw];
-  r = compareXY(p, y);
-  if ( r < 0 ) {
-    j--;
-    A[lw] = A[j]; A[j] = y;
-    lw--;
-    j--;
-    goto LLgMRM;
-  }
-  if ( r == 0 ) {
-    if ( N == lw ) { // L empty also 
-      /*
-    |o[----------------------------]o|
-    N                                M
-    x -> M
-      */
-      if ( compareXY(AM, p) <= 0 ) {
-	A[N] = AM; A[M] = x;
-	goto Finish0;
-      }
-      /*
-      if ( compareXY(p, AM) == 0 ) {
-	A[N] = AM; A[M] = x;
-	goto Finish0;
-      }
-      */
-      // AM -> R
-      A[N] = x; A[M] = AM;
-      goto Finish0;
-    }
-    lw--;
-    goto LLgMM;
-  }
-  // y -> L
-  if ( i < lw ) {
-    A[lw] = x;
-    x = y;
-    lw--;
-    goto LLgML;
-  }
-  // left gap closed also  y = A[lw] = A[i] -> L
-   /*
-    |o---][-----------------------------]o|
-    N    i                                M
-    x -> M
-   */
-  r = compareXY(AM, p);
-  if ( r < 0 ) {
-    A[N] = AM; A[M] = x;
-    goto FinishL;
-  }
-  if ( r == 0 ) {
-    A[N] = y; A[i] = AM; A[M] = x;
-    i--;
-    goto FinishL;
-  }
-  // compareXY(p, AM) < 0
-  A[M] = AM;
-  A[N] = y; A[i] = x;
-  i--;
-  goto FinishL;
-
- LLgML:
-   /*
-    |o---]-----------+[------------------]o|
-    N    i          lw                     M=j
-    x -> L
-   */
-  i++;
-  y = A[i];
-  r = compareXY(y, p);
-  if ( r < 0 ) goto LLgML;
-  if ( r == 0 ) {
-    if ( i <= lw ) {
-      A[i] = x;
-      x = y;
-      goto  LLgMM;
-    }
-    // left gap closed  y = A[i]
-   /*
-    |o--------------][------------------]o|
-    N                i                    M=j
-    x -> L
-   */
-    A[N] = x;
-    if ( compareXY(p, AM) <= 0 ) {
-      A[M] = AM;
-      i--;
-      goto FinishL;
-    }
+ done: 
     /*
-    // if ( p == AM ) {
-    if ( compareXY(p, AM) == 0 ) { 
-      A[M] = AM;
-      i--;
-      goto FinishL;
-    }
+      |---]---------[---------|
+      N   i         j         M
     */
-    // AM -> L
-    A[M] = y; A[i] = AM;
-    goto FinishL;
-  }
-  // y -> R
-  A[i] = x;
-  x = y;
-  goto LLgMR;
+  // printf("done dflgm N %i i %i j %i M %i\n", N,i,j,M);
 
- LLgMR:
-   /*
-    |o---]-----------+[------------------]o|
-    N    i          lw                     M=j
-    x -> R
-   */
-  y = A[lw];
-  r = compareXY(p, y);
-  if ( r < 0 ) {
-    j--;
-    A[lw] = A[j]; A[j] = y;
-    j--; lw--;
-    goto LLgMRR;
-  }
-  if ( r == 0 ) {
-    if ( N == lw ) { // L is empty 
-      /*
-    |o[----------------------------]o|
-    N                                M=j
-    x -> R
+    /*
+      for ( z = N; z <= i; z++ )
+	// if ( p3 <= A[z] ) {
+        if ( compareXY(p3, A[z]) <= 0 ) {
+	  printf("doneL z %i\n", z);
+	  printf("N %i i %i lw %i up %i j %i M %i\n", N,i,lw,up,j,M);
+	  exit(0);
+	}
+      for ( z = i+1; z < j; z++ )
+	// if ( p3 != A[z] ) {
+	if ( compareXY(p3, A[z]) != 0 ) {
+	  printf("doneM z %i\n", z);
+	  printf("N %i i %i lw %i up %i j %i M %i\n", N,i,lw,up,j,M);
+	  exit(0);
+	}
+      for ( z = j; z <= M ; z++ )
+	// if ( A[z] <= p3 ) {
+	if ( compareXY(A[z], p3) <= 0 ) {
+	  printf("doneR z %i\n", z);
+	  printf("N %i i %i lw %i up %i j %i M %i\n", N,i,lw,up,j,M);
+	  exit(0);
+	}
       */
-     if ( compareXY(AM, p) <= 0 ) { 
-	A[N] = AM;
-	A[M] = x;
-	goto Finish0;
-     }
-     /*
-     if ( compareXY(p, AM) == 0 ) { 
-	A[N] = AM;
-	A[M] = x;
-	goto Finish0;
-     }
-     */
-     // AM -> R
-     j--;// = M-1
-     A[N] = A[j];
-     if ( x <= AM ) {
-       A[j] = x; A[M] = AM;
-     } else {
-       A[j] = AM; A[M] = x;
-     }
-     goto Finish0;
+    if ( i - N  < M - j ) {
+      (*cut)(N, i, depthLimit);
+      (*cut)(j, M, depthLimit);
+      return;
     }
-    lw--;
-    goto LLgMR;
-  }
-  // y -> L
-  if ( i < lw ) {
-    j--;
-    A[lw] = A[j]; A[j] = x;
-    x = y;
-    lw--; j--;
-    goto LLgMRL;
-  }
-  // left gap closed y = A[lw] = A[i] -> L
- /*
-    |o---][----------------------------]o|
-    N    i                               M=j
-    x -> R
-   */
-  r = compareXY(AM, p);
-  if ( r < 0 ) {
-    A[N] = AM; A[M] = x;
-    goto FinishL;
-  }
-  if ( r == 0 ) {
-    A[M] = x;
-    A[N] = y; A[i] = AM;
-    i--;
-    goto FinishL;
-  }
-  // AM -> R
-  j--;
-  A[N] = y; A[i] = A[j];
-  if ( x <= AM ) {
-    A[j] = x; A[M] = AM;
-  } else {
-    A[j] = AM; A[M] = x;
-  }
-  i--;
-  goto FinishL;
-
- LMgRR:
-   /*
-    |o[---------------]+-------------[---o|
-    N                  up            j    M
-    x -> R
-   */
-  j--;
-  y = A[j];
-  r = compareXY(p, y);
-  if ( r < 0 ) goto LMgRR;
-  if ( 0 < r ) {
-    A[j] = x;
-    x = y;
-   /*
-    |o[---------------]+-------------[---o|
-    N                  up            j    M
-    x -> L
-   */
-    goto LMgRL;
-  }
-  // y -> M
-  if ( up <= j ) {
-    A[j] = x;
-    x = y;
-    goto LMgRM;
-  }
-  // right gap closed  y = A[j]
-  /*
-    |o[---------------][----------------o|
-    N                 j                  M
-    x -> R
-   */
-  A[M] = x;
-  if ( compareXY(AM, p) <= 0 ) {
-    A[N] = AM;
-    j++;
-    goto FinishR;
-  }
-  /*
-  if ( compareXY(p, AM) == 0 ) {
-    A[N] = AM;
-    j++;
-    goto FinishR;
-  }
-  */
-  // AM -> R
-  A[N] = A[j]; A[j] = AM;
-  goto FinishR;
-
- LMgRL:
-   /*
-    |o[---------------]+-------------[---o|
-    N                  up            j    M
-    x -> L
-   */
-  y = A[up];
-  r = compareXY(y, p);
-  if ( r < 0 ) { // create L
-    i++;
-    A[up] = A[i]; A[i] = y;
-    i++; up++;
-    goto LLMgRL;    
-  }
-  if ( r == 0 ) {
-    if ( up == M ) { // R is empty 
-      /*
-    |o[----------------------------]o|
-    N                                M
-    x -> L
-      */
-      if ( compareXY(p, AM) <= 0 ) {
-	A[N] = x; A[M] = AM;
-	goto Finish0;
-      }
-      /*
-      if ( compareXY(p, AM) == 0 ) {
-	A[N] = x; A[M] = AM;
-	goto Finish0;
-      }
-      */
-      // AM -> L
-      i++;
-      A[M] = A[i];
-      if ( x <= AM ) {
-       A[N] = x; A[i] = AM;
-      } else {
-	A[N] = AM; A[i] = x;
-      }
-      goto Finish0;
-    }
-    up++;
-    goto LMgRL;
-  }
-  // y -> R
-  if ( up < j ) {
-    i++;
-    A[up] = A[i]; A[i] = x;
-    x = y;
-    i++; up++;
-    goto LLMgRR;
-  }
-  // right gap closed   y = A[up] = A[j]
-  /*
-    |o[-----------------------------][---o|
-    N                                j    M
-    x -> L
-   */
-  r = compareXY(p, AM);
-  if ( r < 0 ) {
-    A[N] = x; A[M] = AM;
-    goto FinishR;
-  }
-  if ( r == 0 ) {
-    A[N] = x; 
-    A[M] = A[j]; A[j] = AM;
-    j++;
-    goto FinishR;
-  }
-  // AM -> L
-  i++;
-  A[M] = A[j]; A[j] = A[i];
-  if ( x <= AM ) {
-    A[N] = x; A[i] = AM;
-  } else {
-    A[N] = AM; A[i] = x;
-  }
-  j--;
-  goto FinishR;
-
-  int k;
-
- Finish0:
-  return;
-
- FinishL:
-    (*cut)(N, i, depthLimit);
-  return;
-
- FinishR:
     (*cut)(j, M, depthLimit);
-  return;
-
- Finish:
-  /* holes filled
-    |o---------][------][-----------------o|
-    N           i      j                   M
-  */
-  /*
-  int k;
-  if ( i <= N ) {
-    printf("Error i-index\n");
-    printf("N: %i i: %i j: %i M: %i\n", N, i, j, M);
-    exit(1);
-  }
-  if ( j < i ) {
-    printf("Error i-j-index\n");
-    printf("N: %i i: %i j: %i M: %i\n", N, i, j, M);
-    exit(1);
-  }
-  if ( M <= j ) {
-    printf("Error j-index\n");
-    printf("N: %i i: %i j: %i M: %i\n", N, i, j, M);
-    exit(1);
-  }
-  for (k = N; k < i; k++) 
-    // if ( p <= A[k] ) {
-    if ( compareXY(p, A[k]) <= 0 ) {
-      printf("Error L at k: %d \n", k);
-      printf("N: %i i: %i j: %i M: %i\n", N, i, j, M);
-      exit(1);
-    }
-  for (k = i; k <= j; k++) 
-    // if ( p != A[k] ) {
-    if ( compareXY(p, A[k]) != 0 ){
-      printf("Error M at k: %d \n", k);
-      printf("N: %d i: %d j: %d M: %d\n", N, i, j, M);
-      exit(1);
-    }
-  for (k = j+1; k <= M; k++) 
-    // if ( A[k] <= p ) {
-    if ( compareXY(A[k], p) <= 0 ) {
-      printf("Error R at k: %d \n", k);
-      printf("N: %d i: %d j: %d M: %d\n", N, i, j, M);
-      exit(1);
-    }
-  */
-  if ( i - N  < M - j ) {
-    (*cut)(N, i-1, depthLimit);
-    (*cut)(j+1, M, depthLimit);
-  } else {
-    (*cut)(j+1, M, depthLimit);
-    (*cut)(N, i-1);
-  }
-} // end of cut3duplicates
+    (*cut)(N, i, depthLimit);
+} // end dflgm
 
 
 

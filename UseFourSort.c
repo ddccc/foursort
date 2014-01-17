@@ -158,9 +158,9 @@ int main (int argc, char *argv[]) {
      // compareQuicksort0AgainstFourSort();
      // compareQsortAgainstQuicksort0(); 
      // compareQsortAgainstFourSort();
-     // compareLQAgainstFourSort(); // LQ is qsort in the Linux C-library
-     // compareBentleyAgainstFourSort();
-     // compareChenSortAgainstFourSort();
+     compareLQAgainstFourSort(); // LQ is qsort in the Linux C-library
+     compareBentleyAgainstFourSort();
+     compareChenSortAgainstFourSort();
      // compareXYZAgainstFourSortBT(); // using the Bentley test-bench
      // validateFourSortBT(); // against heapsort on Bentley test-bench
      // compare00LQAgainstFourSort();
@@ -620,27 +620,13 @@ void compareChenSortAgainstFourSort() {
 
 // Infrastructure for the Bentley test-bench; adapted from:
 // Bentley, J.L. & M.D. McIlroy, "Engineering a Sort Function", 1993.
+/*
 void reverse();
 void reverseFront();
 void reverseBack();
 void tweakSort();
 void dither();
-void sawtooth(void **A, int n, int m, int tweak) {
-  // int *A = malloc (sizeof(int) * n);
-  struct intval *pi;
-  int k;
-  for (k = 0; k < n; k++) {
-    pi = (struct intval *)A[k];
-    pi->val = k % m; 
-  }
-  if ( tweak <= 0 ) return;
-  if ( tweak == 1 ) { reverse(A, n); return; }
-  if ( tweak == 2 ) { reverseFront(A, n); return; }
-  if ( tweak == 3 ) { reverseBack(A, n); return; }
-  if ( tweak == 4 ) { tweakSort(A, n); return; }
-  dither(A, n);
-} // end sawtooth
-
+*/
 void reverse2();
 void reverse(void **A, int n) {
   reverse2(A, 0, n-1);
@@ -675,6 +661,22 @@ void dither(void **A, int n) {
     pi->val = pi->val + (k % 5);
   }
 } // end dither
+
+void sawtooth(void **A, int n, int m, int tweak) {
+  // int *A = malloc (sizeof(int) * n);
+  struct intval *pi;
+  int k;
+  for (k = 0; k < n; k++) {
+    pi = (struct intval *)A[k];
+    pi->val = k % m; 
+  }
+  if ( tweak <= 0 ) return;
+  if ( tweak == 1 ) { reverse(A, n); return; }
+  if ( tweak == 2 ) { reverseFront(A, n); return; }
+  if ( tweak == 3 ) { reverseBack(A, n); return; }
+  if ( tweak == 4 ) { tweakSort(A, n); return; }
+  dither(A, n);
+} // end sawtooth
 
 void rand2(void **A, int n, int m, int tweak, int seed) {
   srand(seed);
@@ -748,6 +750,28 @@ void shuffle(void **A, int n, int m, int tweak, int seed) {
   dither(A, n);
 } // end shuffle
 
+void slopes(void **A, int n, int m, int tweak) {
+  int k, i, b, ak;
+  i = k = b = 0; ak = 1;
+  struct intval *pi;
+  while ( k < n ) {
+    if (1000000 < ak) ak = k; else
+    if (ak < -1000000) ak = -k;
+    // A[k] = -(ak + b); ak = A[k];
+    pi = (struct intval *)A[k];
+    ak = -(ak + b);
+    pi->val = ak;
+    k++; i++; b++;
+    if ( 11 == b ) { b = 0; }
+    if ( m == i ) { ak = ak*2; i = 0; }
+  }
+  if ( tweak <= 0 ) return;
+  if ( tweak == 1 ) { reverse(A, n); return; }
+  if ( tweak == 2 ) { reverseFront(A, n); return; }
+  if ( tweak == 3 ) { reverseBack(A, n); return; }
+  if ( tweak == 4 ) { tweakSort(A, n); return; }
+  dither(A, n);
+} // end slopes
 
 void bentley();
 // Wrapper function to invoke bentley

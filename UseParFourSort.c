@@ -111,7 +111,7 @@ void validateXYZ();
 void testFourSort();
 void testFourSort2();
 void timeTest();
-void cut3duplicates(int N, int M, int pivotx, void (*cut)(), int depthLimit);
+void dflgm(int N, int M, int pivotx, void (*cut)(), int depthLimit);
 void compareFoursortAgainstCut2();
 void callCut2(void **AA, int siz, int (*compar ) () );
 void validateFourSortBT(); // validation on the Bentley bench test against heapsort
@@ -549,63 +549,35 @@ void cut2c(int N, int M, int depthLimit) {
         void *ae1 = A[e1], *ae2 = A[e2], *ae3 = A[e3], *ae4 = A[e4], *ae5 = A[e5];
 	void *t;
         // if (ae1 > ae2) { t = ae1; ae1 = ae2; ae2 = t; }
-	int r; void *duplicate = NULL;
-	r = compareXY(ae1, ae2);
-	if ( 0 == r ) duplicate = ae2; else                  // 1-2
-	  if ( 0 < r ) { t = ae1; ae1 = ae2; ae2 = t; }
 
-	r = compareXY(ae4, ae5);
-	if ( 0 == r ) duplicate = ae4; else                  // 4-5
-	  if ( 0 < r ) { t = ae4; ae4 = ae5; ae5 = t; }
-
-	r = compareXY(ae1, ae3);
-	if ( 0 == r ) duplicate = ae3; else                  // 1-3
-	  if ( 0 < r ) { t = ae1; ae1 = ae3; ae3 = t; }
-
-	r = compareXY(ae2, ae3);
-	if ( 0 == r ) duplicate = ae3; else                  // 2-3
-	  if ( 0 < r ) { t = ae2; ae2 = ae3; ae3 = t; }
-
-	r = compareXY(ae1, ae4);
-	if ( 0 == r ) duplicate = ae4; else
-	  if ( 0 < r ) { t = ae1; ae1 = ae4; ae4 = t; }      // 1-4
-
-	r = compareXY(ae3, ae4);
-	if ( 0 == r ) duplicate = ae3; else
-	  if ( 0 < r ) { t = ae3; ae3 = ae4; ae4 = t; }      // 3-4
-
-	r = compareXY(ae2, ae5);
-	if ( 0 == r ) duplicate = ae2; else
-	  if ( 0 < r ) { t = ae2; ae2 = ae5; ae5 = t; }      // 2-5
-
-	r = compareXY(ae2, ae3);
-	if ( 0 == r ) duplicate = ae3; else                  // 2-3
-	  if ( 0 < r ) { t = ae2; ae2 = ae3; ae3 = t; }
-
-	r = compareXY(ae4, ae5);                             // 4-5
-	if ( 0 == r ) duplicate = ae4; else
-	  if ( 0 < r ) { t = ae4; ae4 = ae5; ae5 = t; }
+	if ( 0 < compareXY(ae1, ae2) ) { t = ae1; ae1 = ae2; ae2 = t; } // 1-2
+	if ( 0 < compareXY(ae4, ae5) ) { t = ae4; ae4 = ae5; ae5 = t; } // 4-5
+	if ( 0 < compareXY(ae1, ae3) ) { t = ae1; ae1 = ae3; ae3 = t; } // 1-3
+	if ( 0 < compareXY(ae2, ae3) ) { t = ae2; ae2 = ae3; ae3 = t; } // 2-3
+	if ( 0 < compareXY(ae1, ae4) ) { t = ae1; ae1 = ae4; ae4 = t; } // 1-4
+	if ( 0 < compareXY(ae3, ae4) ) { t = ae3; ae3 = ae4; ae4 = t; } // 3-4
+	if ( 0 < compareXY(ae2, ae5) ) { t = ae2; ae2 = ae5; ae5 = t; } // 2-5
+	if ( 0 < compareXY(ae2, ae3) ) { t = ae2; ae2 = ae3; ae3 = t; } // 2-3
+	if ( 0 < compareXY(ae4, ae5) ) { t = ae4; ae4 = ae5; ae5 = t; } // 4-5
 	// ... and reassign
 	A[e1] = ae1; A[e2] = ae2; A[e3] = ae3; A[e4] = ae4; A[e5] = ae5;
 
-	if ( NULL != duplicate ) { // found a duplicate thus delegate
-	  int duplicatex = 0;
-	  if ( duplicate == ae4 ) { duplicatex = e4; } else
-	  if ( duplicate == ae3 ) { duplicatex = e3; } else
-	  if ( duplicate == ae2 ) { duplicatex = e2; } else
-	  if ( duplicate == ae1 ) { duplicatex = e1; } else
-	  if ( duplicate == ae5 ) { duplicatex = e5; } else
-	    { goto skip; } // defensive
-	  void cut2c();
-	  cut3duplicates(N, M, duplicatex, cut2c, depthLimit);
-	  return;
-	}
- skip:
 	// Fix end points
 	if ( compareXY(ae1, A[N]) < 0 ) iswap(N, e1, A);
 	if ( compareXY(A[M], ae5) < 0 ) iswap(M, e5, A);
 
 	register void *T = ae3; // pivot
+
+	// check Left label invariant
+	// if ( T <= A[N] || A[M] < T ) {
+	if ( compareXY(T, A[N]) <= 0 || compareXY(A[M], T) < 0) {
+	   // give up because cannot find a good pivot
+	   // dflgm is a dutch flag type of algorithm
+	   void cut2c();
+	   dflgm(N, M, e3, cut2c, depthLimit);
+	   return;
+	 }
+
 	register int I, J; // indices
 	register void *AI, *AJ; // array values
 
@@ -616,24 +588,24 @@ void cut2c(int N, int M, int depthLimit) {
 	// The left segment has elements < T
 	// The right segment has elements >= T
 
-    Left:
-	I = I + 1;
-	AI = A[I];
+  Left:
+	// I = I + 1;
+	// AI = A[I];
 	// if (AI < T) goto Left;
-	if ( compareXY(AI, T) < 0 ) goto Left;
-    Right:
-	J = J - 1;
-	AJ = A[J];
+	// if ( compareXY(AI,  T) < 0 ) goto Left;
+	while ( compareXY(A[++I],  T) < 0 ); AI = A[I];
+  Right:
+	// J = J - 1;
+	// AJ = A[J];
 	// if ( T <= AJ ) goto Right;
-	if ( compareXY(T, AJ) <= 0 ) goto Right;
+	// if ( compareXY(T, AJ) <= 0 ) goto Right;
+	while ( compareXY(T, A[--J]) <= 0 ); AJ = A[J];
 	if ( I < J ) {
-	    A[I] = AJ; A[J] = AI;
-	    goto Left;
+	  A[I] = AJ; A[J] = AI;
+	  goto Left;
 	}
-
-	int left = I-N;
-	int right = M-J;
-	if ( left < right ) { // smallest one first
+	// Tail iteration
+	if ( (I - N) < (M - J) ) { // smallest one first
 	  cut2c(N, J, depthLimit);
 	    // cut2(I, M);
 	    N = I;
@@ -653,29 +625,8 @@ void callCut2(void **AA, int siz,
   cut2(0, siz-1);
 } // end callCut2
 
-
 // Here infrastructure for the Bentley test-bench
 // It has been adapted for this setting
-void reverse();
-void reverseFront();
-void reverseBack();
-void tweakSort();
-void dither();
-void sawtooth(void **A, int n, int m, int tweak) {
-  // int *A = malloc (sizeof(int) * n);
-  struct intval *pi;
-  int k;
-  for (k = 0; k < n; k++) {
-    pi = (struct intval *)A[k];
-    pi->val = k % m; 
-  }
-  if ( tweak <= 0 ) return;
-  if ( tweak == 1 ) { reverse(A, n); return; }
-  if ( tweak == 2 ) { reverseFront(A, n); return; }
-  if ( tweak == 3 ) { reverseBack(A, n); return; }
-  if ( tweak == 4 ) { tweakSort(A, n); return; }
-  dither(A, n);
-} // end sawtooth
 
 void reverse2();
 void reverse(void **A, int n) {
@@ -713,6 +664,22 @@ void dither(void **A, int n) {
     pi->val = pi->val + (k % 5);
   }
 } // end dither
+
+void sawtooth(void **A, int n, int m, int tweak) {
+  // int *A = malloc (sizeof(int) * n);
+  struct intval *pi;
+  int k;
+  for (k = 0; k < n; k++) {
+    pi = (struct intval *)A[k];
+    pi->val = k % m; 
+  }
+  if ( tweak <= 0 ) return;
+  if ( tweak == 1 ) { reverse(A, n); return; }
+  if ( tweak == 2 ) { reverseFront(A, n); return; }
+  if ( tweak == 3 ) { reverseBack(A, n); return; }
+  if ( tweak == 4 ) { tweakSort(A, n); return; }
+  dither(A, n);
+} // end sawtooth
 
 void rand2(void **A, int n, int m, int tweak, int seed) {
   srand(seed);
@@ -785,6 +752,30 @@ void shuffle(void **A, int n, int m, int tweak, int seed) {
   if ( tweak == 4 ) { tweakSort(A, n); return; }
   dither(A, n);
 } // end shuffle
+
+void slopes(void **A, int n, int m, int tweak) {
+  int k, i, b, ak;
+  i = k = b = 0; ak = 1;
+  struct intval *pi;
+  while ( k < n ) {
+    if (1000000 < ak) ak = k; else
+    if (ak < -1000000) ak = -k;
+    // A[k] = -(ak + b); ak = A[k];
+    pi = (struct intval *)A[k];
+    ak = -(ak + b);
+    pi->val = ak;
+    k++; i++; b++;
+    if ( 11 == b ) { b = 0; }
+    if ( m == i ) { ak = ak*2; i = 0; }
+  }
+  if ( tweak <= 0 ) return;
+  if ( tweak == 1 ) { reverse(A, n); return; }
+  if ( tweak == 2 ) { reverseFront(A, n); return; }
+  if ( tweak == 3 ) { reverseBack(A, n); return; }
+  if ( tweak == 4 ) { tweakSort(A, n); return; }
+  dither(A, n);
+} // end slopes
+
 
 void heapSort();
 void callHeapSort(void **A, int size, 
