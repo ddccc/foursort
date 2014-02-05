@@ -66,12 +66,15 @@ OTHER DEALINGS WITH THE SOFTWARE OR DOCUMENTATION.
 #include <stdlib.h>
 #include <math.h>
 
+const int cut2Limit = 127;
+
 // To avoid compiler warnings:::
 
 void callCut2(void **AA, int size, 
 	      int (*compar ) (const void *, const void * ) );
 void callQuicksort0(void **AA, int size, int (*compar ) () );
 // void callQsort(void **A, int size, int (*compar ) () );
+void callDflgm2(void **AA, int size, int (*compar ) () );
 void foursort(void **AA, int size, 
 	      int (*compar ) (const void *, const void * ));
 void callLQ(void **A, int size, int (*compar ) () ); 
@@ -92,11 +95,16 @@ void compareQuicksort0AgainstFourSort();
 void compareLQAgainstFourSort(); // LQ is ako qsort in the Linux C-library
 void compareBentleyAgainstFourSort(); 
 void compareChenSortAgainstFourSort();
+void compareDFLGMAgainstFourSort();
 void compare00LQAgainstFourSort();
 void compare00BentleyAgainstFourSort();
 void compare00ChenAgainstFourSort();
 void compareXYZAgainstFourSortBT();
 int clock();
+void heapc();
+void quicksort0c();
+void iswap();
+void dflgm();
 
 // Example of objects that can be used to populate an array to be sorted:
   // To obtain the int field from X: ((struct intval *) X)->val
@@ -158,9 +166,10 @@ int main (int argc, char *argv[]) {
      // compareQuicksort0AgainstFourSort();
      // compareQsortAgainstQuicksort0(); 
      // compareQsortAgainstFourSort();
-     compareLQAgainstFourSort(); // LQ is qsort in the Linux C-library
-     compareBentleyAgainstFourSort();
-     compareChenSortAgainstFourSort();
+     // compareLQAgainstFourSort(); // LQ is qsort in the Linux C-library
+     // compareBentleyAgainstFourSort();
+     // compareChenSortAgainstFourSort();
+     compareDFLGMAgainstFourSort();
      // compareXYZAgainstFourSortBT(); // using the Bentley test-bench
      // validateFourSortBT(); // against heapsort on Bentley test-bench
      // compare00LQAgainstFourSort();
@@ -579,6 +588,14 @@ void callCut2(void **AA, int size,
   cut2(0, size-1);
 } // end callCut2
 
+void dflgm2(int N, int M);
+void callDflgm2(void **AA, int size, int (*compar ) () ) {
+  A = AA;
+  compareXY = compar;
+  dflgm2(0, size-1);
+} // end callDflgm2
+
+
 void compareQsortAgainstQuicksort0() {
    void callQsort(), callQuicksort0();
    compareAlgorithms2("Compare qsort vs quicksort0", 1024 * 1024, 32,
@@ -615,7 +632,14 @@ void compareChenSortAgainstFourSort() {
   void callChensort(), callCut2();
   compareAlgorithms2("Compare chenSort vs cut2", 1024 * 1024, 32,
 		     callChensort, callCut2);
-} // end compareChenSortAgainstFourSort(){ 
+} // end compareChenSortAgainstFourSort()
+
+void compareDFLGMAgainstFourSort() {
+  void callDflgm2(), callCut2();
+  compareAlgorithms0("Compare DFLGM vs cut2", 1024 * 1024, 32,
+		     callDflgm2, callCut2);
+} // end compareDFLGMAgainstFourSort()
+
 
 
 // Infrastructure for the Bentley test-bench; adapted from:
@@ -1802,3 +1826,70 @@ void compareXYZAgainstFourSortBT() {
     seedLimit = seedLimit / 2;
   }
 } // end compareXYZAgainstFourSortBT
+
+void dflgmc(int N, int M, int depthLimit);
+void dflgm2(int N, int M) {
+  // printf("dflgm2 N %i M %i\n", N, M);
+  int L = M - N;
+  if ( L < cut2Limit ) { 
+    quicksort0(N, M);
+    return;
+  }
+  int depthLimit = 2 * floor(log(L));
+  dflgmc(N, M, depthLimit);
+} // end dflgm2
+
+void dflgmc(int N, int M, int depthLimit) {
+  // printf("dflgmc N %i M %i depthLimit %i\n", N, M, depthLimit);
+  if ( depthLimit <= 0 ) {
+    heapc(A, N, M);
+    return;
+  }
+  int L = M - N;
+  if ( L < cut2Limit ) { 
+    quicksort0c(N, M, depthLimit);
+    return;
+  }
+  depthLimit--;
+  /*
+    int pn = N;
+    int pm = M;
+    int p0 = (pn+pm)/2;
+    int d = L/8;
+    pn = med(A, pn, pn + d, pn + 2 * d, compareXY);
+    p0 = med(A, p0 - d, p0, p0 + d, compareXY);
+    pm = med(A, pm - 2 * d, pm - d, pm, compareXY);
+    p0 = med(A, pn, p0, pm, compareXY); // p0 is index to 'best' pivot ...
+    dflgm(N, M, p0, dflgmc, depthLimit);
+  */
+        int sixth = (L + 1) / 6;
+        int e1 = N  + sixth;
+        int e5 = M - sixth;
+        int e3 = (N+M) / 2; // The midpoint
+        int e4 = e3 + sixth;
+        int e2 = e3 - sixth;
+
+        // Sort these elements using a 5-element sorting network ...
+        void *ae1 = A[e1], *ae2 = A[e2], *ae3 = A[e3], *ae4 = A[e4], *ae5 = A[e5];
+	void *t;
+        // if (ae1 > ae2) { t = ae1; ae1 = ae2; ae2 = t; }
+	if ( 0 < compareXY(ae1, ae2) ) { t = ae1; ae1 = ae2; ae2 = t; } // 1-2
+	if ( 0 < compareXY(ae4, ae5) ) { t = ae4; ae4 = ae5; ae5 = t; } // 4-5
+	if ( 0 < compareXY(ae1, ae3) ) { t = ae1; ae1 = ae3; ae3 = t; } // 1-3
+	if ( 0 < compareXY(ae2, ae3) ) { t = ae2; ae2 = ae3; ae3 = t; } // 2-3
+	if ( 0 < compareXY(ae1, ae4) ) { t = ae1; ae1 = ae4; ae4 = t; } // 1-4
+	if ( 0 < compareXY(ae3, ae4) ) { t = ae3; ae3 = ae4; ae4 = t; } // 3-4
+	if ( 0 < compareXY(ae2, ae5) ) { t = ae2; ae2 = ae5; ae5 = t; } // 2-5
+	if ( 0 < compareXY(ae2, ae3) ) { t = ae2; ae2 = ae3; ae3 = t; } // 2-3
+	if ( 0 < compareXY(ae4, ae5) ) { t = ae4; ae4 = ae5; ae5 = t; } // 4-5
+	// ... and reassign
+	A[e1] = ae1; A[e2] = ae2; A[e3] = ae3; A[e4] = ae4; A[e5] = ae5;
+
+	// Fix end points
+	if ( compareXY(ae1, A[N]) < 0 ) iswap(N, e1, A);
+	if ( compareXY(A[M], ae5) < 0 ) iswap(M, e5, A);
+
+	dflgm(N, M, e3, dflgmc, depthLimit);
+
+} // end dflgmc
+

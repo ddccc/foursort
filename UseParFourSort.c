@@ -594,7 +594,7 @@ void cut2c(int N, int M, int depthLimit) {
 	// if (AI < T) goto Left;
 	// if ( compareXY(AI,  T) < 0 ) goto Left;
 	while ( compareXY(A[++I],  T) < 0 ); AI = A[I];
-  Right:
+ // Right:
 	// J = J - 1;
 	// AJ = A[J];
 	// if ( T <= AJ ) goto Right;
