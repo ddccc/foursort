@@ -81,6 +81,7 @@ void callLQ(void **A, int size, int (*compar ) () );
 void callChensort(void **A, int size, int (*compar ) () ); 
 void testQsort();
 void testQuicksort0();
+void testDFLGM();
 void testFourSort();
 void testBentley();
 void validateQsort();
@@ -88,6 +89,7 @@ void validateHeapSort();
 void validateFourSort();
 void validateBentley();
 void validateFourSortBT();
+void validateDFLGM();
 void timeTest();
 void compareQsortAgainstQuicksort0();
 void compareQsortAgainstFourSort();
@@ -95,12 +97,14 @@ void compareQuicksort0AgainstFourSort();
 void compareLQAgainstFourSort(); // LQ is ako qsort in the Linux C-library
 void compareBentleyAgainstFourSort(); 
 void compareChenSortAgainstFourSort();
+void compareDFLGMAgainstQuicksort0();
 void compareDFLGMAgainstFourSort();
 void compare00LQAgainstFourSort();
 void compare00BentleyAgainstFourSort();
 void compare00ChenAgainstFourSort();
 void compareXYZAgainstFourSortBT();
 int clock();
+void insertionsort(); 
 void heapc();
 void quicksort0c();
 void iswap();
@@ -148,12 +152,14 @@ int main (int argc, char *argv[]) {
   // To check that a sorted array is produced
      // testQuicksort0();
      // testFourSort(); 
+     testDFLGM(); 
      // testQsort();
      // testBentley();
   // validateHeapSort();
   // validateFourSort();
   // validateQsort();
   // validateBentley();
+  validateDFLGM();
   // Measure the sorting time of an algorithm
   // timeTest();
   // Compare the outputs of two sorting algorithms
@@ -169,7 +175,8 @@ int main (int argc, char *argv[]) {
      // compareLQAgainstFourSort(); // LQ is qsort in the Linux C-library
      // compareBentleyAgainstFourSort();
      // compareChenSortAgainstFourSort();
-     compareDFLGMAgainstFourSort();
+     // compareDFLGMAgainstQuicksort0();
+     // compareDFLGMAgainstFourSort();
      // compareXYZAgainstFourSortBT(); // using the Bentley test-bench
      // validateFourSortBT(); // against heapsort on Bentley test-bench
      // compare00LQAgainstFourSort();
@@ -195,7 +202,19 @@ void fillarray(void **A, int lng, int startv) {
   for ( i = 0; i < lng; i++) {
     pi = (struct intval *)A[i];
     pi->val = rand(); 
+    // pi->val = 0; 
   }
+  /*
+  // for testing dflgm:
+  int val = 1000000000;
+  pi = (struct intval *)A[(lng-1)/2];
+  pi->val = val; 
+  int delta = lng/20;
+  for ( i = 0; i < lng; i=i+delta) {
+    pi = (struct intval *)A[i];
+    pi->val = val; 
+  }
+  */
 } // end of fillarray
 
 // Check that adjacent objects in an array are ordered.
@@ -269,6 +288,11 @@ void testFourSort() {
   testAlgorithm("Running foursort ...", foursort);
 }
 //  */
+void testDFLGM() {
+  void callDflgm2();
+  testAlgorithm0("Check dflgm()", 1024*1024*2, callDflgm2);
+} // end testDFLGM()
+
 void testQuicksort0() {
   void callQuicksort0();
   testAlgorithm0("Check quicksort0()", 1024*1024, callQuicksort0);
@@ -300,12 +324,12 @@ void validateAlgorithm0(char* label, int siz, void (*alg1)(), void (*alg2)() ) {
     pi = myMalloc("validateAlgorithm0 2", sizeof (struct intval));
     A[i] = pi;
   };
-  // fillarray(A, siz, 100);
+  fillarray(A, siz, 100);
   // here alternative ways to fill the array
-  int k;
+  // int k;
   // for ( k = 0; k < siz; k++ ) { pi = (struct intval *) A[k]; pi->val = 0; }
   // for ( k = 0; k < siz; k++ ) { pi = (struct intval *) A[k]; pi->val = k%5; }
-  for ( k = 0; k < siz; k++ ) { pi = (struct intval *) A[k]; pi->val = siz-k; }
+  // for ( k = 0; k < siz; k++ ) { pi = (struct intval *) A[k]; pi->val = siz-k; }
   // ... sort it
   (*alg1)(A, siz, compareIntVal);
 
@@ -316,10 +340,10 @@ void validateAlgorithm0(char* label, int siz, void (*alg1)(), void (*alg2)() ) {
     pi =  myMalloc("validateAlgorithm0 4", sizeof (struct intval));
     B[i] = pi;
   };
-  // fillarray(B, siz, 100);
+  fillarray(B, siz, 100);
   // for ( k = 0; k < siz; k++ ) { pi = (struct intval *) B[k]; pi->val = 0; }
   // for ( k = 0; k < siz; k++ ) { pi = (struct intval *) B[k]; pi->val = k%5; }
-  for ( k = 0; k < siz; k++ ) { pi = (struct intval *) B[k]; pi->val = siz-k; }
+  // for ( k = 0; k < siz; k++ ) { pi = (struct intval *) B[k]; pi->val = siz-k; }
   // ... sort it
   (*alg2)(B, siz, compareIntVal);
  
@@ -348,7 +372,7 @@ void validateAlgorithm0(char* label, int siz, void (*alg1)(), void (*alg2)() ) {
 
 // Like validateAlgorithm0 but with fixed array size
 void validateAlgorithm(char* label, void (*alg1)(), void (*alg2)() ) {
-  validateAlgorithm0(label, 1024 * 1024, alg1, alg2);
+  validateAlgorithm0(label, 1024 * 1024 * 16, alg1, alg2);
 } // end validateAlgorithm
 
 /* Example:: replace XYZ by what you want to validate
@@ -369,6 +393,11 @@ void validateFourSort() {
 		    callQuicksort0, foursort);
 }
 
+void validateDFLGM() {
+  void callQuicksort0(), callDflgm2();
+  validateAlgorithm("Running validate DFLGM ...",
+		    callQuicksort0, callDflgm2);
+}
 // Note:
 //      alg1 is using the comparison function compareIntVal
 //      alg2 is using the comparison function compareIntVal2
@@ -634,12 +663,17 @@ void compareChenSortAgainstFourSort() {
 		     callChensort, callCut2);
 } // end compareChenSortAgainstFourSort()
 
+void compareDFLGMAgainstQuicksort0() {
+  void callDflgm2(), callQuicksort0();
+  compareAlgorithms0("Compare DFLGM vs quicksort0", 1024 * 1024, 32,
+		     callDflgm2, callQuicksort0);
+} // end compareDFLGMAgainstQuicksort0()
+
 void compareDFLGMAgainstFourSort() {
   void callDflgm2(), callCut2();
   compareAlgorithms0("Compare DFLGM vs cut2", 1024 * 1024, 32,
 		     callDflgm2, callCut2);
 } // end compareDFLGMAgainstFourSort()
-
 
 
 // Infrastructure for the Bentley test-bench; adapted from:
@@ -1031,6 +1065,7 @@ void validateFourSortBT() {
 	    // plateau(A, siz, m, tweak);
 	    // shuffle(A, siz, m, tweak, seed);
 	    // stagger(A, siz, m, tweak);
+	    // slopes(A, siz, m, tweak);
 	  TFill = clock() - TFill;
 	  T = clock();
 	  for (seed = 0; seed < seedLimit; seed++) { 
@@ -1039,6 +1074,7 @@ void validateFourSortBT() {
 	    // plateau(A, siz, m, tweak);
 	    // shuffle(A, siz, m, tweak, seed);
 	    // stagger(A, siz, m, tweak);
+	    // slopes(A, siz, m, tweak);
 	    callHeapsort(A, siz, compareIntVal);
 	  }
 	  sortcBTime = sortcBTime + clock() - T - TFill;
@@ -1051,7 +1087,10 @@ void validateFourSortBT() {
 	    // plateau(B, siz, m, tweak);
 	    // shuffle(B, siz, m, tweak, seed);
 	    // stagger(B, siz, m, tweak);
+	    // slopes(B, siz, m, tweak);
+
 	    foursort(B, siz, compareIntVal);  
+	    // callDflgm2(B, siz, compareIntVal);
 	  }
 	  cut2Time = cut2Time + clock() - T - TFill;
 	  sumCut2 += cut2Time;
@@ -1831,10 +1870,6 @@ void dflgmc(int N, int M, int depthLimit);
 void dflgm2(int N, int M) {
   // printf("dflgm2 N %i M %i\n", N, M);
   int L = M - N;
-  if ( L < cut2Limit ) { 
-    quicksort0(N, M);
-    return;
-  }
   int depthLimit = 2 * floor(log(L));
   dflgmc(N, M, depthLimit);
 } // end dflgm2
@@ -1846,50 +1881,17 @@ void dflgmc(int N, int M, int depthLimit) {
     return;
   }
   int L = M - N;
+  /*
   if ( L < cut2Limit ) { 
     quicksort0c(N, M, depthLimit);
     return;
   }
-  depthLimit--;
-  /*
-    int pn = N;
-    int pm = M;
-    int p0 = (pn+pm)/2;
-    int d = L/8;
-    pn = med(A, pn, pn + d, pn + 2 * d, compareXY);
-    p0 = med(A, p0 - d, p0, p0 + d, compareXY);
-    pm = med(A, pm - 2 * d, pm - d, pm, compareXY);
-    p0 = med(A, pn, p0, pm, compareXY); // p0 is index to 'best' pivot ...
-    dflgm(N, M, p0, dflgmc, depthLimit);
   */
-        int sixth = (L + 1) / 6;
-        int e1 = N  + sixth;
-        int e5 = M - sixth;
-        int e3 = (N+M) / 2; // The midpoint
-        int e4 = e3 + sixth;
-        int e2 = e3 - sixth;
-
-        // Sort these elements using a 5-element sorting network ...
-        void *ae1 = A[e1], *ae2 = A[e2], *ae3 = A[e3], *ae4 = A[e4], *ae5 = A[e5];
-	void *t;
-        // if (ae1 > ae2) { t = ae1; ae1 = ae2; ae2 = t; }
-	if ( 0 < compareXY(ae1, ae2) ) { t = ae1; ae1 = ae2; ae2 = t; } // 1-2
-	if ( 0 < compareXY(ae4, ae5) ) { t = ae4; ae4 = ae5; ae5 = t; } // 4-5
-	if ( 0 < compareXY(ae1, ae3) ) { t = ae1; ae1 = ae3; ae3 = t; } // 1-3
-	if ( 0 < compareXY(ae2, ae3) ) { t = ae2; ae2 = ae3; ae3 = t; } // 2-3
-	if ( 0 < compareXY(ae1, ae4) ) { t = ae1; ae1 = ae4; ae4 = t; } // 1-4
-	if ( 0 < compareXY(ae3, ae4) ) { t = ae3; ae3 = ae4; ae4 = t; } // 3-4
-	if ( 0 < compareXY(ae2, ae5) ) { t = ae2; ae2 = ae5; ae5 = t; } // 2-5
-	if ( 0 < compareXY(ae2, ae3) ) { t = ae2; ae2 = ae3; ae3 = t; } // 2-3
-	if ( 0 < compareXY(ae4, ae5) ) { t = ae4; ae4 = ae5; ae5 = t; } // 4-5
-	// ... and reassign
-	A[e1] = ae1; A[e2] = ae2; A[e3] = ae3; A[e4] = ae4; A[e5] = ae5;
-
-	// Fix end points
-	if ( compareXY(ae1, A[N]) < 0 ) iswap(N, e1, A);
-	if ( compareXY(A[M], ae5) < 0 ) iswap(M, e5, A);
-
-	dflgm(N, M, e3, dflgmc, depthLimit);
-
+  if ( L < 2 ) { // tougher test
+    insertionsort(N, M);
+    return;
+  }
+  dflgm(N, M, (N+M)/2, dflgmc, depthLimit-1);
+	
 } // end dflgmc
 
