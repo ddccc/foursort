@@ -519,7 +519,7 @@ void cut2(int N, int M) {
     quicksort0(N, M);
     return;
   }
-  int depthLimit = 2 * floor(log(L));
+  int depthLimit = 2.5 * floor(log(L));
   cut2c(N, M, depthLimit);
 } // end cut2
 

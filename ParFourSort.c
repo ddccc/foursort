@@ -88,7 +88,7 @@ void cut2P(int N, int M) {
     quicksort0(N, M);
     return;
   }
-  int depthLimit = 2 * floor(log(L));
+  int depthLimit = 2.5 * floor(log(L));
   cut2Pc(N, M, depthLimit);
 } // end cut2P
 
@@ -371,7 +371,7 @@ void foursort(void **AA, int size,
   NUMTHREADS = numberOfThreads;
   // printf("Entering sortArray\n");
   ll = newStack();
-  int depthLimit = 2 * floor(log(size));
+  int depthLimit = 2.5 * floor(log(size));
   struct task *t = newTask(0, size-1, depthLimit);
   addTaskSynchronized(ll, t);
 

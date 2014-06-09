@@ -152,14 +152,14 @@ int main (int argc, char *argv[]) {
   // To check that a sorted array is produced
      // testQuicksort0();
      // testFourSort(); 
-     testDFLGM(); 
+     // testDFLGM(); 
      // testQsort();
      // testBentley();
   // validateHeapSort();
   // validateFourSort();
   // validateQsort();
   // validateBentley();
-  validateDFLGM();
+  // validateDFLGM();
   // Measure the sorting time of an algorithm
   // timeTest();
   // Compare the outputs of two sorting algorithms
@@ -177,7 +177,7 @@ int main (int argc, char *argv[]) {
      // compareChenSortAgainstFourSort();
      // compareDFLGMAgainstQuicksort0();
      // compareDFLGMAgainstFourSort();
-     // compareXYZAgainstFourSortBT(); // using the Bentley test-bench
+     compareXYZAgainstFourSortBT(); // using the Bentley test-bench
      // validateFourSortBT(); // against heapsort on Bentley test-bench
      // compare00LQAgainstFourSort();
      // compare00BentleyAgainstFourSort();
@@ -1786,7 +1786,7 @@ void compareXYZAgainstFourSortBT() {
       // m = 1024 * 1024; {
       // m = 1; {
       	for (tweak = 0; tweak <= 5; tweak++ ) {
-	// tweak = 5; {
+	  if (4 == tweak) continue; // due to bias 
 	  sortcBTime = 0; cut2Time = 0;
 	  TFill = clock();
 	  for (seed = 0; seed < seedLimit; seed++) 
@@ -1795,6 +1795,7 @@ void compareXYZAgainstFourSortBT() {
 	    // plateau(A, siz, m, tweak);
 	    // shuffle(A, siz, m, tweak, seed);
 	    // stagger(A, siz, m, tweak);
+	    // slopes(A, siz, m, tweak);
 	  TFill = clock() - TFill;
 	  T = clock();
 	  for (seed = 0; seed < seedLimit; seed++) { 
@@ -1803,6 +1804,7 @@ void compareXYZAgainstFourSortBT() {
 	    // plateau(A, siz, m, tweak);
 	    // shuffle(A, siz, m, tweak, seed);
 	    // stagger(A, siz, m, tweak);
+	    // slopes(A, siz, m, tweak);
 
 	    // Alternative algorithms to compare against FourSort::
 	    // callLQ(A, siz, compareIntVal2);
@@ -1819,6 +1821,8 @@ void compareXYZAgainstFourSortBT() {
 	    // plateau(B, siz, m, tweak);
 	    // shuffle(B, siz, m, tweak, seed);
 	    // stagger(B, siz, m, tweak);
+	    // slopes(A, siz, m, tweak);
+
 	    foursort(B, siz, compareIntVal);  
 	  }
 	  cut2Time = cut2Time + clock() - T - TFill;
@@ -1870,7 +1874,7 @@ void dflgmc(int N, int M, int depthLimit);
 void dflgm2(int N, int M) {
   // printf("dflgm2 N %i M %i\n", N, M);
   int L = M - N;
-  int depthLimit = 2 * floor(log(L));
+  int depthLimit = 2.5 * floor(log(L));
   dflgmc(N, M, depthLimit);
 } // end dflgm2
 
@@ -1881,17 +1885,52 @@ void dflgmc(int N, int M, int depthLimit) {
     return;
   }
   int L = M - N;
-  /*
-  if ( L < cut2Limit ) { 
+  // if ( L < cut2Limit ) { 
+  if ( L < 50 ) { 
     quicksort0c(N, M, depthLimit);
     return;
   }
+  depthLimit--;
+  /*
+    int pn = N;
+    int pm = M;
+    int p0 = (pn+pm)/2;
+    int d = L/8;
+    pn = med(A, pn, pn + d, pn + 2 * d, compareXY);
+    p0 = med(A, p0 - d, p0, p0 + d, compareXY);
+    pm = med(A, pm - 2 * d, pm - d, pm, compareXY);
+    p0 = med(A, pn, p0, pm, compareXY); // p0 is index to 'best' pivot ...
+    dflgm(N, M, p0, dflgmc, depthLimit);
   */
-  if ( L < 2 ) { // tougher test
-    insertionsort(N, M);
-    return;
-  }
-  dflgm(N, M, (N+M)/2, dflgmc, depthLimit-1);
-	
+        int sixth = (L + 1) / 6;
+        int e1 = N  + sixth;
+        int e5 = M - sixth;
+        int e3 = (N+M) / 2; // The midpoint
+        int e4 = e3 + sixth;
+        int e2 = e3 - sixth;
+
+        // Sort these elements using a 5-element sorting network ...
+        void *ae1 = A[e1], *ae2 = A[e2], *ae3 = A[e3], *ae4 = A[e4], *ae5 = A[e5];
+	void *t;
+        // if (ae1 > ae2) { t = ae1; ae1 = ae2; ae2 = t; }
+	if ( 0 < compareXY(ae1, ae2) ) { t = ae1; ae1 = ae2; ae2 = t; } // 1-2
+	if ( 0 < compareXY(ae4, ae5) ) { t = ae4; ae4 = ae5; ae5 = t; } // 4-5
+	if ( 0 < compareXY(ae1, ae3) ) { t = ae1; ae1 = ae3; ae3 = t; } // 1-3
+	if ( 0 < compareXY(ae2, ae3) ) { t = ae2; ae2 = ae3; ae3 = t; } // 2-3
+	if ( 0 < compareXY(ae1, ae4) ) { t = ae1; ae1 = ae4; ae4 = t; } // 1-4
+	if ( 0 < compareXY(ae3, ae4) ) { t = ae3; ae3 = ae4; ae4 = t; } // 3-4
+	if ( 0 < compareXY(ae2, ae5) ) { t = ae2; ae2 = ae5; ae5 = t; } // 2-5
+	if ( 0 < compareXY(ae2, ae3) ) { t = ae2; ae2 = ae3; ae3 = t; } // 2-3
+	if ( 0 < compareXY(ae4, ae5) ) { t = ae4; ae4 = ae5; ae5 = t; } // 4-5
+	// ... and reassign
+	A[e1] = ae1; A[e2] = ae2; A[e3] = ae3; A[e4] = ae4; A[e5] = ae5;
+
+	// Fix end points
+	if ( compareXY(ae1, A[N]) < 0 ) iswap(N, e1, A);
+	if ( compareXY(A[M], ae5) < 0 ) iswap(M, e5, A);
+
+	dflgm(N, M, e3, dflgmc, depthLimit);
+
 } // end dflgmc
+ 
 
