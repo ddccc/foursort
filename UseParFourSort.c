@@ -508,7 +508,7 @@ void compareFoursortAgainstCut2() {
 int (*compareXY)();
 void **A;
 
-const int cut2Limit = 250;
+const int cut2Limit = 127;
 void quicksort0(int N, int M);
 void cut2c();
 // cut2 is support function to call cut2C, which is (like) FourSort

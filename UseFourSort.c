@@ -66,7 +66,6 @@ OTHER DEALINGS WITH THE SOFTWARE OR DOCUMENTATION.
 #include <stdlib.h>
 #include <math.h>
 
-const int cut2Limit = 127;
 
 // To avoid compiler warnings:::
 
@@ -1885,7 +1884,6 @@ void dflgmc(int N, int M, int depthLimit) {
     return;
   }
   int L = M - N;
-  // if ( L < cut2Limit ) { 
   if ( L < 50 ) { 
     quicksort0c(N, M, depthLimit);
     return;

@@ -57,9 +57,7 @@ OTHER DEALINGS WITH THE SOFTWARE OR DOCUMENTATION.
 #include <string.h>
 #include <math.h>
 
-// const int cut2Limit = 127;
-extern int cut2Limit;
-const int cut3Limit = 250; 
+const int cut2Limit = 127;
 
 char* expiration = "*** License for foursort has expired ...\n";
 
