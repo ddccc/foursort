@@ -370,7 +370,7 @@ void dflgm(int N, int M, int pivotx, void (*cut)(), int depthLimit) {
     */
   // printf("done dflgm N %i i %i j %i M %i\n", N,i,j,M);
 
-    /*
+  /*
       for ( z = N; z <= i; z++ )
 	// if ( p3 <= A[z] ) {
         if ( compareXY(p3, A[z]) <= 0 ) {

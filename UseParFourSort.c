@@ -133,7 +133,7 @@ int main (int argc, char *argv[]) {
      // ... and uncomment also testFourSort2 ...
      // testFourSort2();
   // Compare the outputs of two sorting algorithms
-  // validateXYZ(); // must provide an other algorithm XYZ
+  validateXYZ(); // must provide an other algorithm XYZ
      // ... and uncomment validateXYZ ...
   // Measure the sorting time of an algorithm
      // timeTest();
@@ -333,7 +333,7 @@ void validateAlgorithm0(char* label, int siz, void (*alg1)(), void (*alg2)() ) {
 // Like validateAlgorithm0 but with fixed array size
 // alg1 is a parallel one, alg2 is sequential
 void validateAlgorithm(char* label, void (*alg1)(), void (*alg2)() ) {
-  validateAlgorithm0(label, 1024 * 1024 * 2, alg1, alg2);
+  validateAlgorithm0(label, 1024 * 1024 * 16, alg1, alg2);
 } // end validateAlgorithm
 
 /* Example:: replace XYZ by what you want to validate
@@ -346,7 +346,7 @@ validateXYZ() {
 
 void validateXYZ() {
   void foursort(), callCut2();
-  validateAlgorithm("Running validate callCut2 ...",
+  validateAlgorithm("Running validate foursort ...",
 		    foursort, callCut2);
 } // end validateXYZ
 
@@ -508,6 +508,15 @@ void compareFoursortAgainstCut2() {
 int (*compareXY)();
 void **A;
 
+// The next lines up to the include makes the inclusion of cut2 obsolete
+const int cut2Limit = 127;
+void quicksort0(int N, int M);
+void quicksort0c(int N, int M, int depthLimit);
+void iswap(int p, int q, void **A);
+void heapc(void **A, int N, int M);
+#include "C2sort"
+
+/*
 const int cut2Limit = 127;
 void quicksort0(int N, int M);
 void cut2c();
@@ -616,6 +625,7 @@ void cut2c(int N, int M, int depthLimit) {
 	M = J;
 	goto Loop;
     } // (*  OF cut2c; *) ... the brackets remind that this was Pascal code
+*/
 
 // invoking 3-layered quicksort
 void callCut2(void **AA, int siz, 
