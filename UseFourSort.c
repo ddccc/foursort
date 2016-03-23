@@ -77,7 +77,9 @@ void callDflgm2(void **AA, int size, int (*compar ) () );
 void foursort(void **AA, int size, 
 	      int (*compar ) (const void *, const void * ));
 void callLQ(void **A, int size, int (*compar ) () ); 
+void callBentley(void **A, int size, int (*compar ) () );
 void callChensort(void **A, int size, int (*compar ) () ); 
+void callMyQS(void **A, int size, int (*compar ) () ); 
 void testQsort();
 void testQuicksort0();
 void testDFLGM();
@@ -106,6 +108,7 @@ int clock();
 void insertionsort(); 
 void heapc();
 void quicksort0c();
+void myqs();
 void iswap();
 void dflgm();
 
@@ -160,7 +163,7 @@ int main (int argc, char *argv[]) {
   // validateBentley();
   // validateDFLGM();
   // Measure the sorting time of an algorithm
-  // timeTest();
+  timeTest();
   // Compare the outputs of two sorting algorithms
      // validateXYZ(); // must provide an other algorithm XYZ
      // ... and uncomment validateXYZ ...
@@ -176,7 +179,7 @@ int main (int argc, char *argv[]) {
      // compareChenSortAgainstFourSort();
      // compareDFLGMAgainstQuicksort0();
      // compareDFLGMAgainstFourSort();
-     compareXYZAgainstFourSortBT(); // using the Bentley test-bench
+     // compareXYZAgainstFourSortBT(); // using the Bentley test-bench
      // validateFourSortBT(); // against heapsort on Bentley test-bench
      // compare00LQAgainstFourSort();
      // compare00BentleyAgainstFourSort();
@@ -475,11 +478,11 @@ void timeTest() {
     pi = myMalloc("timeTest 2", sizeof (struct intval));
     A[i] = pi;
   };
-
+  int repeat = 5;
   // warm up the process
   fillarray(A, siz, 666); 
   int sumTimes = 0;
-  for (z = 0; z < 5; z++) { // repeat to check stability
+  for (z = 0; z < repeat; z++) { // repeat to check stability
     algTime = 0;
     // measure the array fill time
     int TFill = clock();
@@ -499,13 +502,18 @@ void timeTest() {
       // for ( k = 0; k < siz; k++ ) A[k] = k%5;
       // for ( k = 0; k < siz; k++ ) A[k] = siz-k;
       foursort(A, siz, compareIntVal);  
+      // callLQ(A, siz, compareIntVal2);
+      // callBentley(A, siz, compareIntVal2);
+      // callChensort(A, siz, compareIntVal2);
+      // callMyQS(A, siz, compareIntVal);  
+      // callQuicksort0(A, siz, compareIntVal);
     }
     // ... and subtract the fill time to obtain the sort time
     algTime = clock() - T - TFill;
     printf("algTime: %d \n", algTime);
     sumTimes = sumTimes + algTime;
   }
-  printf("%s %d %s", "sumTimes: ", sumTimes, "\n");
+  printf("%s %d %s", "average: ", sumTimes/repeat, "\n");
   // free array
   for (i = 0; i < siz; i++) {
     free(A[i]); 
@@ -608,6 +616,122 @@ void callQuicksort0(void **AA, int size,
   quicksort0(0, size-1);
 } // end callQuicksort0
 
+void callMyQS(void **AA, int size, 
+	int (*compar ) (const void *, const void * ) ) {
+  A = AA;
+  compareXY = compar;
+  myqs(0, size-1);
+} // end callMyQS
+
+void myqsc();
+void myqs(int N, int M) {
+  int L = M-N;
+  if (L <= 0) return;
+  int dp = 2.5 * floor(log(L));
+  myqsc(N, M, dp);
+}
+// void dflgm();
+// void heapc();
+// void quicksort0c();
+void myqsc(int N, int M, int depthLimit) {
+  int L;
+ again:
+  // printf("myqs N %i M %i\n", N, M);
+  L = M - N;
+  // if ( L <= 0 ) return;
+  /*
+  if ( L <= 10 ) { 
+    insertionsort(N, M);
+    return;
+  }
+  */
+  if ( L < 127 ) { 
+    quicksort0c(N, M, depthLimit);
+    return;
+  }
+
+  if ( depthLimit <= 0 ) {
+    heapc(A, N, M);
+    return;
+  }
+  depthLimit--;
+
+  /*
+    // 10 < L
+    // grab median of 3 or 9 to get a good pivot
+    int pm = (N+M)/2;
+    int pl = N;
+    int pn = M;
+    if (L > 40) { // do median of 9
+      int d = L/8;
+      pl = med(A, pl, pl + d, pl + 2 * d, compareXY);
+      pm = med(A, pm - d, pm, pm + d, compareXY);
+      pn = med(A, pn - 2 * d, pn - d, pn, compareXY);
+    }
+    pm = med(A, pl, pm, pn, compareXY); // pm is index to 'best' pivot ...
+    */
+  // /*
+        int sixth = (L + 1) / 6;
+        int e1 = N  + sixth;
+        int e5 = M - sixth;
+        int e3 = (N+M) / 2; // The midpoint
+        int e4 = e3 + sixth;
+        int e2 = e3 - sixth;
+
+        // Sort these elements using a 5-element sorting network
+        // Sort these elements using a 5-element sorting network
+        void *ae1 = A[e1], *ae2 = A[e2], *ae3 = A[e3], *ae4 = A[e4], *ae5 = A[e5];
+	void *t;
+        // if (ae1 > ae2) { t = ae1; ae1 = ae2; ae2 = t; }
+	if ( 0 < compareXY(ae1, ae2) ) { t = ae1; ae1 = ae2; ae2 = t; } // 1-2
+	if ( 0 < compareXY(ae4, ae5) ) { t = ae4; ae4 = ae5; ae5 = t; } // 4-5
+	if ( 0 < compareXY(ae1, ae3) ) { t = ae1; ae1 = ae3; ae3 = t; } // 1-3
+	if ( 0 < compareXY(ae2, ae3) ) { t = ae2; ae2 = ae3; ae3 = t; } // 2-3
+	if ( 0 < compareXY(ae1, ae4) ) { t = ae1; ae1 = ae4; ae4 = t; } // 1-4
+	if ( 0 < compareXY(ae3, ae4) ) { t = ae3; ae3 = ae4; ae4 = t; } // 3-4
+	if ( 0 < compareXY(ae2, ae5) ) { t = ae2; ae2 = ae5; ae5 = t; } // 2-5
+	if ( 0 < compareXY(ae2, ae3) ) { t = ae2; ae2 = ae3; ae3 = t; } // 2-3
+	if ( 0 < compareXY(ae4, ae5) ) { t = ae4; ae4 = ae5; ae5 = t; } // 4-5
+	// ... and reassign
+	A[e1] = ae1; A[e2] = ae2; A[e3] = ae3; A[e4] = ae4; A[e5] = ae5;
+
+	// Fix end points
+	if ( compareXY(ae1, A[N]) < 0 ) iswap(N, e1, A);
+	if ( compareXY(A[M], ae5) < 0 ) iswap(M, e5, A);
+
+
+	register void *pv = ae3; // pivot
+
+	// check Left label invariant
+	// if ( pv <= A[N] || A[M] < pv ) {
+	if ( compareXY(pv, A[N]) <= 0 || compareXY(A[M], pv) < 0) {
+	   // give up because cannot find a good pivot
+	   // dflgm is a dutch flag type of algorithm
+	  void myqsc();
+	  dflgm(N, M, e3, myqsc, depthLimit);
+	  return;
+	}
+
+    int i = N; int j = M; // indices
+
+	// The left segment has elements < T
+	// The right segment has elements >= T
+ loop:
+    // while ( pv <= A[j] ) j--;
+    while ( compareXY(pv, A[--j]) <= 0 );
+    // while ( i < j && A[i] <= pv ) i++;
+    while ( compareXY(A[++i], pv) < 0 );
+    if ( i < j ) { t = A[i]; A[i] = A[j]; A[j] = t; goto loop; }
+    if ( i-N < M-i ) { // order the sub-segments
+      myqs(N, j); // myqs(A, i+1, M); 
+      N = i; goto again;
+    } else {
+      myqs(i, M); // myqs(A, N, i-1); 
+      M = j; goto again;
+    }
+} // end myqsc
+
+
 void cut2(int N, int M);
 void callCut2(void **AA, int size, 
 	int (*compar ) (const void *, const void * ) ) {
@@ -648,7 +772,6 @@ void compareLQAgainstFourSort() { // LQ is qsort in the Linux C-library
 		     callLQ, callCut2);
 } // end compareLqAgainstFourSort
 
-void callBentley(void **A, int size, int (*compar ) () );
 void compareBentleyAgainstFourSort() { 
   void callBentley(), callCut2();
    // compareAlgorithms2("Compare bentley vs cut2", 1024, 32 * 1024,
