@@ -1,0 +1,135 @@
+
+
+void dflgm(int N, int M, int pivotx, void (*cut)(), int depthLimit) {
+  // printf("dflgm N %i M %i pivotx %i depthLimit %i\n", N,M,pivotx,depthLimit);
+  /*
+    Simple version of partitioning with: L/M/R
+    L < pivot, M = pivot, R > pivot
+   */
+  register int i, j, lw, up; // indices
+  register void* p3; // pivot
+  register int r; // comparison output 
+  // int z; // for tracing
+
+  p3 = A[pivotx]; // There IS a middle value somewhere:
+  lw = i = N; up = j = M; 
+    /*
+      |--)--)-------------(--(--|
+      N lw  i             j  up M
+      
+      N <= lw <= i <= j <= up <= M
+      N <= x < lw ==> A[x] = p3
+      lw <= x < i ==> A[x] < p3
+      j < x <= up  ==> p3 < A[x]
+      up < x <= M  ==> p3 = A[x] 
+    */
+
+ again:
+  // i <= j
+  while ( i <= j && ( r = compareXY(p3, A[j])) <= 0 ) {
+    if ( 0 == r ) {
+      if ( up != j ) iswap(up, j, A); 
+      up--; 
+    }
+    j--;
+  }
+  // j < i or A[j] < p3
+  // j < i -> ( j < x -> p3 <= A[x] )
+  // i <= j -> A[j] < p3 
+  if ( j <= i ) { i = j; j++; goto moves; }
+
+  while ( i < j && (  r = compareXY(A[i], p3)) <= 0 ) {
+    if ( 0 == r ) {
+      if ( lw != i ) { iswap(lw, i, A); }
+      lw++; 
+    }
+    i++;
+  }
+
+  if ( i < j ) {
+    iswap(i, j, A);
+    i++; j--;
+    if ( i <= j ) goto again;
+    // j <i
+  }
+  i = j; j++;
+  int z, k, cnt;
+
+ moves:
+  /*
+  // pre tests::
+  if ( i+1 != j ) {
+    printf(" i+1 != j N %i lw %i i %i j %i up %i M %i\n", N, lw, i, j, up, M);
+    exit(0);
+  }
+  for ( z = N; z <= i; z++ )
+      // if ( p3 < A[z] ) {
+      if ( compareXY(p3, A[z]) < 0 ) {
+      printf("pre doneL z %i\n", z);
+      printf("N %i i %i lw %i up %i j %i M %i\n", N,i,lw,up,j,M);
+      exit(0);
+    }
+  for ( z = j; z <= M ; z++ )
+      // if ( A[z] < p3 ) {
+      if ( compareXY(A[z], p3) < 0 ) {
+      printf("pre doneR z %i\n", z);
+      printf("N %i i %i lw %i up %i j %i M %i\n", N,i,lw,up,j,M);
+      exit(0);
+    }
+  */
+  
+  cnt = lw - N;
+  if ( 0 < cnt ) { // move left side
+    if ( lw - N <= i - lw ) 
+      for ( k = lw - 1; N <= k; k-- ) { iswap(i, k, A); i--; }
+    else { 
+      int m = N;
+      for ( k = lw; k <= i; k++ ) { iswap(k, m, A); m++; }
+      i = i-cnt;
+    }
+  }
+
+  cnt = M - up;
+  if ( 0 < cnt  ) {// move right side
+    if ( up - j <= M - up ) {
+      int w = M;
+      for ( k = up; j <= k; k-- ) { iswap(k, w, A); w--; }
+      j = j+cnt;
+    } else {
+      for ( k = up+1; k <= M; k++ ) { iswap(k, j, A); j++; }
+    }
+  } 
+  /* Test:
+      for ( z = N; z <= i; z++ )
+	  // if ( p3 < A[z] ) {
+	  if ( compareXY(p3, A[z]) <= 0 ) {
+	  printf("doneL z %i\n", z);
+	  printf("N %i i %i lw %i up %i j %i M %i\n", N,i,lw,up,j,M);
+	  exit(0);
+	}
+      for ( z = i+1; z < j; z++ )
+	  // if ( p3 != A[z] ) {
+	  if ( compareXY(p3, A[z]) != 0 ) {
+	  printf("doneM z %i\n", z);
+	  printf("N %i i %i lw %i up %i j %i M %i\n", N,i,lw,up,j,M);
+	  exit(0);
+	}
+      for ( z = j; z <= M ; z++ )
+	  // if ( A[z] <= p3 ) {
+	  if ( compareXY(A[z], p3) <= 0 ) {
+	  printf("doneR z %i\n", z);
+	  printf("N %i i %i lw %i up %i j %i M %i\n", N,i,lw,up,j,M);
+	  exit(0);
+	}
+      */
+
+    if ( i - N  < M - j ) {
+      (*cut)(N, i, depthLimit);
+      (*cut)(j, M, depthLimit);
+      return;
+    }
+    (*cut)(j, M, depthLimit);
+    (*cut)(N, i, depthLimit);
+} // end dflgmW
+
+

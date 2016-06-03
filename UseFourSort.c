@@ -88,6 +88,7 @@ void testBentley();
 void validateQsort();
 void validateHeapSort();
 void validateFourSort();
+void validateMyQS();
 void validateBentley();
 void validateFourSortBT();
 void validateDFLGM();
@@ -95,11 +96,13 @@ void timeTest();
 void compareQsortAgainstQuicksort0();
 void compareQsortAgainstFourSort();
 void compareQuicksort0AgainstFourSort();
+void compareMyQSAgainstFourSort();
 void compareLQAgainstFourSort(); // LQ is ako qsort in the Linux C-library
 void compareBentleyAgainstFourSort(); 
 void compareChenSortAgainstFourSort();
 void compareDFLGMAgainstQuicksort0();
 void compareDFLGMAgainstFourSort();
+void compare00QxAgainstFourSort();
 void compare00LQAgainstFourSort();
 void compare00BentleyAgainstFourSort();
 void compare00ChenAgainstFourSort();
@@ -159,11 +162,12 @@ int main (int argc, char *argv[]) {
      // testBentley();
   // validateHeapSort();
   // validateFourSort();
+  // validateMyQS();
   // validateQsort();
   // validateBentley();
   // validateDFLGM();
   // Measure the sorting time of an algorithm
-  timeTest();
+  // timeTest();
   // Compare the outputs of two sorting algorithms
      // validateXYZ(); // must provide an other algorithm XYZ
      // ... and uncomment validateXYZ ...
@@ -172,6 +176,7 @@ int main (int argc, char *argv[]) {
      // ... and uncomment also compareFoursortAgainstXYZ ...
   // Whatever here:::
      // compareQuicksort0AgainstFourSort();
+     // compareMyQSAgainstFourSort();
      // compareQsortAgainstQuicksort0(); 
      // compareQsortAgainstFourSort();
      // compareLQAgainstFourSort(); // LQ is qsort in the Linux C-library
@@ -181,9 +186,10 @@ int main (int argc, char *argv[]) {
      // compareDFLGMAgainstFourSort();
      // compareXYZAgainstFourSortBT(); // using the Bentley test-bench
      // validateFourSortBT(); // against heapsort on Bentley test-bench
+     compare00QxAgainstFourSort();
      // compare00LQAgainstFourSort();
      // compare00BentleyAgainstFourSort();
-     // compare00ChenAgainstFourSort()
+     // compare00ChenAgainstFourSort();
      return 0;
 } // end of main
 
@@ -203,7 +209,7 @@ void fillarray(void **A, int lng, int startv) {
   struct intval *pi;
   for ( i = 0; i < lng; i++) {
     pi = (struct intval *)A[i];
-    pi->val = rand(); 
+    const int range = 1024*1024*32; pi->val = rand()%range; 
     // pi->val = 0; 
   }
   /*
@@ -395,6 +401,12 @@ void validateFourSort() {
 		    callQuicksort0, foursort);
 }
 
+void validateMyQS() {
+  void callQuicksort0(), callMyQS();
+  validateAlgorithm("Running validate myqs ...",
+		    callQuicksort0, callMyQS);
+}
+
 void validateDFLGM() {
   void callQuicksort0(), callDflgm2();
   validateAlgorithm("Running validate DFLGM ...",
@@ -467,7 +479,7 @@ void timeTest() {
   int algTime, T;
   int seed;
   // int seedLimit = 10;
-  int seedLimit = 1;
+  int seedLimit = 5;
   int z;
   int siz = 1024 * 1024 * 16;
   // construct array
@@ -507,9 +519,10 @@ void timeTest() {
       // callChensort(A, siz, compareIntVal2);
       // callMyQS(A, siz, compareIntVal);  
       // callQuicksort0(A, siz, compareIntVal);
+      // callDflgm2(A, siz, compareIntVal);
     }
     // ... and subtract the fill time to obtain the sort time
-    algTime = clock() - T - TFill;
+    algTime = (clock() - T - TFill)/seedLimit;
     printf("algTime: %d \n", algTime);
     sumTimes = sumTimes + algTime;
   }
@@ -593,7 +606,8 @@ void compareAlgorithms2(char *label, int siz, int seedLimit,
 
 void compareAlgorithms(char *label, void (*alg1)(), void (*alg2)() ) {
   // compareAlgorithms0(label, 1024, 32 * 1024, alg1, alg2);
-  compareAlgorithms0(label, 16 * 1024 * 1024, 2, alg1, alg2);
+  // compareAlgorithms0(label, 16 * 1024 * 1024, 2, alg1, alg2);
+  compareAlgorithms0(label, 1024 * 1024, 32, alg1, alg2);
 } // end compareAlgorithms
 
 
@@ -615,6 +629,12 @@ void callQuicksort0(void **AA, int size,
   compareXY = compar;
   quicksort0(0, size-1);
 } // end callQuicksort0
+
+void compareMyQSAgainstFourSort() {
+  void foursort(), callMyQS();
+  compareAlgorithms("Compare myqs vs foursort", callMyQS, foursort);
+  // compareAlgorithms("Compare myqs vs foursort", foursort, callMyQS);
+} // end compareMyQSAgainstFourSort
 
 void callMyQS(void **AA, int size, 
 	int (*compar ) (const void *, const void * ) ) {
@@ -639,16 +659,16 @@ void myqsc(int N, int M, int depthLimit) {
   // printf("myqs N %i M %i\n", N, M);
   L = M - N;
   // if ( L <= 0 ) return;
-  /*
   if ( L <= 10 ) { 
     insertionsort(N, M);
     return;
   }
-  */
+  /*
   if ( L < 127 ) { 
     quicksort0c(N, M, depthLimit);
     return;
   }
+  */
 
   if ( depthLimit <= 0 ) {
     heapc(A, N, M);
@@ -1291,16 +1311,50 @@ void fillRandom2(void **A, int lng, int startv, int percentage) {
   }
 } // end fillRandom2
 
+void testNonRandom(int p, void **A, int siz, int seedLimit, 
+		   void (*alg1)(), void (*alg2)(), 
+		   int (*compare1)(), int (*compare2)()  ) {
+  int z, alg1Time, alg2Time, T, seed;
+  // for (z = 0; z < 3; z++) { // repeat to check stability
+  for (z = 0; z < 1; z++) { // repeat to check stability
+    alg1Time = 0; alg2Time = 0;
+    int TFill = clock();
+    for (seed = 0; seed < seedLimit; seed++) 
+      fillarray(A, siz, seed);
+    TFill = clock() - TFill;
+    T = clock();
+    for (seed = 0; seed < seedLimit; seed++) { 
+      fillRandom(A, siz, seed, p); // zeros + random
+      // fillRandom2(A, siz, seed, p); // sorted + random
+      (*alg1)(A, siz, compare1); 
+    }
+    alg1Time = clock() - T - TFill;
+    T = clock();
+    for (seed = 0; seed < seedLimit; seed++) { 
+      fillRandom(A, siz, seed, p); // zeros + random
+      // fillRandom2(A, siz, seed, p); // sorted + random
+      (*alg2)(A, siz, compare2);
+    }
+    alg2Time = clock() - T - TFill;
+    printf("%s %d %s %i", "siz: ", siz, " p: ", p);
+    printf(" %s %d %s", "alg1Time: ", alg1Time, " ");
+    printf("%s %d %s", "alg2Time: ", alg2Time, " ");
+    float frac = 0;
+    if ( alg1Time != 0 ) frac = alg2Time / ( 1.0 * alg1Time );
+    printf("%s %f %s", "frac: ", frac, "\n");
+  }
+} // end testNonRandom
+
+
 // Generate distributions with a varying percentage of uniform random numbers
 // and compare the running times of two algorithms
 void compareZeros00(char *label, int siz, int seedLimit, 
 		   void (*alg1)(), void (*alg2)(),
 		   int (*compare1)(), int (*compare2)() ) {
   printf("%s on size: %d seedLimit: %d\n", label, siz, seedLimit);
-  int alg1Time, alg2Time, T;
   int seed;
-  int z;
-  int limit = 1024 * 1024 * 16 + 1;
+  // int limit = 1024 * 1024 * 16 + 1;
+  int limit = 1024 * 1024 + 1;
   while (siz <= limit) {
     printf("%s %d %s %d %s", "siz: ", siz, " seedLimit: ", seedLimit, "\n");
     struct intval *pi;
@@ -1314,37 +1368,14 @@ void compareZeros00(char *label, int siz, int seedLimit,
     // warm up the process
     for (seed = 0; seed < seedLimit; seed++) 
       fillarray(A, siz, seed);
-    int p;
-    for (p = 0; p < 101; p = p + 20 ) { // percentages of random elements
-      // for (z = 0; z < 3; z++) { // repeat to check stability
-      for (z = 0; z < 1; z++) { // repeat to check stability
-      alg1Time = 0; alg2Time = 0;
-      int TFill = clock();
-      for (seed = 0; seed < seedLimit; seed++) 
-	fillarray(A, siz, seed);
-      TFill = clock() - TFill;
-      T = clock();
-      for (seed = 0; seed < seedLimit; seed++) { 
-	// fillRandom(A, siz, seed, p);
-	fillRandom2(A, siz, seed, p);
-	(*alg1)(A, siz, compare1); 
-      }
-      alg1Time = clock() - T - TFill;
-      T = clock();
-      for (seed = 0; seed < seedLimit; seed++) { 
-	// fillRandom(A, siz, seed, p);
-	fillRandom2(A, siz, seed, p);
-	(*alg2)(A, siz, compare2);
-      }
-      alg2Time = clock() - T - TFill;
-      printf("%s %d %s %i", "siz: ", siz, " p: ", p);
-      printf(" %s %d %s", "alg1Time: ", alg1Time, " ");
-      printf("%s %d %s", "alg2Time: ", alg2Time, " ");
-      float frac = 0;
-      if ( alg1Time != 0 ) frac = alg2Time / ( 1.0 * alg1Time );
-      printf("%s %f %s", "frac: ", frac, "\n");
-    }
-    }
+    // int p;
+    // for (p = 0; p < 101; p = p + 20 )  // percentages of random elements
+    //   testNonRandom(p, A, siz, seedLimit, alg1, alg2, compare1, compare2);
+    testNonRandom(0, A, siz, seedLimit, alg1, alg2, compare1, compare2);
+    testNonRandom(20, A, siz, seedLimit, alg1, alg2, compare1, compare2);
+    testNonRandom(40, A, siz, seedLimit, alg1, alg2, compare1, compare2);
+    // testNonRandom(100, A, siz, seedLimit, alg1, alg2, compare1, compare2);
+
     // free array
     for (i = 0; i < siz; i++) {
       free(A[i]);
@@ -1354,6 +1385,16 @@ void compareZeros00(char *label, int siz, int seedLimit,
     seedLimit = seedLimit / 2;
   }
 } // end compareZeros00
+
+
+// used to compare two versions of quicksort0:
+// without and the with delegation to dflgm
+void compare00QxAgainstFourSort() {
+  void callQuicksort0(), foursort();
+  compareZeros00("compare00QxAgainstFoursort", 
+		 1024*1024, 16, callQuicksort0, foursort, 
+		 compareIntVal, compareIntVal);
+} // end compare00QxAgainstFourSort
 
 void compare00LQAgainstFourSort() {
   void callLQ(), foursort();
@@ -1912,40 +1953,42 @@ void compareXYZAgainstFourSortBT() {
 	  sortcBTime = 0; cut2Time = 0;
 	  TFill = clock();
 	  for (seed = 0; seed < seedLimit; seed++) 
-	    sawtooth(A, siz, m, tweak);
+	    // sawtooth(A, siz, m, tweak);
 	    // rand2(A, siz, m, tweak, seed);
 	    // plateau(A, siz, m, tweak);
 	    // shuffle(A, siz, m, tweak, seed);
 	    // stagger(A, siz, m, tweak);
-	    // slopes(A, siz, m, tweak);
+	    slopes(A, siz, m, tweak);
 	  TFill = clock() - TFill;
 	  T = clock();
 	  for (seed = 0; seed < seedLimit; seed++) { 
-	    sawtooth(A, siz, m, tweak);
+	    // sawtooth(A, siz, m, tweak);
 	    // rand2(A, siz, m, tweak, seed);
 	    // plateau(A, siz, m, tweak);
 	    // shuffle(A, siz, m, tweak, seed);
 	    // stagger(A, siz, m, tweak);
-	    // slopes(A, siz, m, tweak);
+	    slopes(A, siz, m, tweak);
 
 	    // Alternative algorithms to compare against FourSort::
 	    // callLQ(A, siz, compareIntVal2);
 	    // callBentley(A, siz, compareIntVal2);
 	    callChensort(A, siz, compareIntVal2);
+            // callMyQS(A, siz, compareIntVal);  
 	  }
 	  sortcBTime = sortcBTime + clock() - T - TFill;
 	  sumQsortB += sortcBTime;
 	  // if ( 4 != tweak ) sumQsortBx += sortcBTime;
 	  T = clock();
 	  for (seed = 0; seed < seedLimit; seed++) { 
-	    sawtooth(B, siz, m, tweak);
+	    // sawtooth(B, siz, m, tweak);
 	    // rand2(B, siz, m, tweak, seed);
 	    // plateau(B, siz, m, tweak);
 	    // shuffle(B, siz, m, tweak, seed);
 	    // stagger(B, siz, m, tweak);
-	    // slopes(A, siz, m, tweak);
+	    slopes(B, siz, m, tweak);
 
-	    foursort(B, siz, compareIntVal);  
+	    foursort(B, siz, compareIntVal); 
+	    // callQuicksort0(B, siz, compareIntVal); 
 	  }
 	  cut2Time = cut2Time + clock() - T - TFill;
 	  sumCut2 += cut2Time;
@@ -2026,7 +2069,7 @@ void dflgmc(int N, int M, int depthLimit) {
         int sixth = (L + 1) / 6;
         int e1 = N  + sixth;
         int e5 = M - sixth;
-        int e3 = (N+M) / 2; // The midpoint
+        int e3 = N + (L>>1); // N + L/2; // (N+M) / 2; // The midpoint
         int e4 = e3 + sixth;
         int e2 = e3 - sixth;
 
