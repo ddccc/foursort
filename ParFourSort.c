@@ -67,45 +67,47 @@ const int cut2PLimit = 127;
 char* expiration = "*** License for foursort has expired ...\n";
 
 // Here more global entities used throughout
-int (*compareXY)();
-void **A;
+// int (*compareXY)();
+// void **A;
 int sleepingThreads = 0;
 int NUMTHREADS;
 
 // the members of ParFourSort
-#include "Isort"
-#include "Hsort"
-#include "Qusort"
-#include "Dsort"
-
+/*
+#include "Isort.c"
+#include "Hsort.c"
+*/
+#include "Qusort.c"
+#include "Dsort.c"
+#include "Qstack.c"
 
 void cut2Pc();
 // cut2P is a support function to call up the workhorse cut2Pc
-void cut2P(int N, int M) { 
+void cut2P(void **A, int N, int M, int (*compareXY)()) { 
   // printf("cut2P %d %d \n", N, M);
   int L = M - N;
   if ( L < cut2PLimit ) { 
-    quicksort0(N, M);
+    quicksort0(A, N, M, compareXY);
     return;
   }
   int depthLimit = 2.5 * floor(log(L));
-  cut2Pc(N, M, depthLimit);
+  cut2Pc(A, N, M, depthLimit, compareXY);
 } // end cut2P
 
 struct stack *ll;
 struct task * newTask();
 void addTaskSynchronized();
 
-void cut2Pc(int N, int M, int depthLimit) {
+void cut2Pc(void **A, int N, int M, int depthLimit, int (*compareXY)()) {
   int L;
   Start:
   if ( depthLimit <= 0 ) {
-    heapc(A, N, M);
+    heapc(A, N, M, compareXY);
     return;
   }
   L = M - N;
   if ( L < cut2PLimit ) { 
-    quicksort0c(N, M, depthLimit);
+    quicksort0c(A, N, M, depthLimit, compareXY);
     return;
   }
 
@@ -148,7 +150,7 @@ void cut2Pc(int N, int M, int depthLimit) {
 	   // give up because cannot find a good pivot
 	   // dflgm is a dutch flag type of algorithm
 	   void cut2Pc();
-	   dflgm(N, M, e3, cut2Pc, depthLimit);
+	   dflgm(A, N, M, e3, cut2Pc, depthLimit, compareXY);
 	   return;
 	 }
 
@@ -182,13 +184,13 @@ void cut2Pc(int N, int M, int depthLimit) {
   	 if ( (I - N) < (M - J) ) { // smallest one first
 	   // cut2Pc(N, J, depthLimit);
 	   // N = I; 
-	   addTaskSynchronized(ll, newTask(I, M, depthLimit));
+	   addTaskSynchronized(ll, newTask(A, I, M, depthLimit, compareXY));
 	   M = J;
 	   goto Start;
 	 }
 	 // cut2Pc(I, M, depthLimit);
 	 // M = J;
-	 addTaskSynchronized(ll, newTask(N, J, depthLimit));
+	 addTaskSynchronized(ll, newTask(A, N, J, depthLimit, compareXY));
 	 N = I;
 	 goto Start;
 } // (*  OF cut2P; *) ... the brackets reminds that this was Pascal code
@@ -203,72 +205,6 @@ void *myMallocSS(char* location, int size) {
   }
   return p;
 } // end of myMalloc
-
-/* Infrastructure for the parallel equipment:
-  To obtain the int n field from X: ((struct task *) X)->n
-  To obtain the int m field from X: ((struct task *) X)->m
-  To obtain the task next field from X: ((struct task *) X)->next
-  */
-struct task {
-  int n;
-  int m;
-  int dl;
-  struct task *next;
-};
-int getN(struct task *t) { return ((struct task *) t)->n; }
-int getM(struct task *t) { return ((struct task *) t)->m; }
-int getDL(struct task *t) { return ((struct task *) t)->dl; }
-struct task *getNext(struct task *t) { return ((struct task *) t)->next; }
-
-void setN(struct task *t, int n) { ((struct task *) t)->n = n; }
-void setM(struct task *t, int m) { ((struct task *) t)->m = m; }
-void setDL(struct task *t, int dl) { ((struct task *) t)->dl = dl; }
-void setNext(struct task *t, struct task* tn) { 
-  ((struct task *) t)->next = tn; }
-struct task *newTask(int N, int M, int depthLimit) {
-  struct task *t = (struct task *) 
-    myMallocSS("ParFourSort/ newTask()", sizeof (struct task));
-  setN(t, N); setM(t, M); setDL(t, depthLimit); setNext(t, NULL);
-  return t;
-} // end newTask
-
-struct stack {
-  struct task *first;
-  int size;
-};
-struct task *getFirst(struct stack *ll) { 
-  return ((struct stack *) ll)->first; }
-int getSize(struct stack *ll) { 
-  return ((struct stack *) ll)->size; }
-void setFirst(struct stack *ll, struct task *t) { 
-  ((struct stack *) ll)->first = t; }
-void setSize(struct stack *ll, int s) { 
-  ((struct stack *) ll)->size = s; }
-void incrementSize(struct stack *ll) { 
-  setSize(ll, getSize(ll) + 1); }
-void decrementSize(struct stack *ll) { 
-  setSize(ll, getSize(ll) - 1); }
-struct stack *newStack() {
-  struct stack *ll = (struct stack *)
-    myMallocSS("ParFourSort/ newStack()", sizeof (struct stack));
-  setFirst(ll, NULL); setSize(ll, 0);
-  return ll;
-} // end newStack
-int isEmpty(struct stack *ll) { 
-  return ( NULL == getFirst(ll) ); 
-} // end isEmpty
-struct task *pop(struct stack *ll) {
-  struct task *t = getFirst(ll);
-  if ( NULL == t ) return NULL;
-  setFirst(ll, getNext(t));
-  decrementSize(ll);
-  return t;
-} // end pop
-void push(struct stack *ll, struct task *t) {
-  if ( !isEmpty(ll) ) setNext(t, getFirst(ll)); 
-  setFirst(ll, t);
-  incrementSize(ll);
-} // end push
 
 
 pthread_mutex_t condition_mutex2 = PTHREAD_MUTEX_INITIALIZER;
@@ -288,7 +224,7 @@ void addTaskSynchronized(struct stack *ll, struct task *t) {
 } // end addTaskSynchronized
 
 // threads execute sortThread
-void *sortThread(void *A) { // A-argument is NOT used
+void *sortThread(void *AAA) { // AAA is not used
   // int taskCnt = 0;
   //  printf("Thread number: %ld #sleepers %d\n", 
   //         pthread_self(), sleepingThreads);
@@ -308,19 +244,21 @@ void *sortThread(void *A) { // A-argument is NOT used
       pthread_mutex_unlock( &condition_mutex2 );
       break;
     }
+    void **A = getA(t);
     int n = getN(t);
     int m = getM(t);
     int depthLimit = getDL(t);
+    int (*compare)() = getXY(t);
     free(t);
     // taskCnt++;
-    cut2Pc(n, m, depthLimit);
+    cut2Pc(A, n, m, depthLimit, compare);
   }
 
   //  printf("Exit of Thread number: %ld taskCnt: %d\n", pthread_self(), taskCnt);
   return NULL;
 } // end sortThread
 
-int partitionLeft(int N, int M) { 
+int partitionLeft(void **A, int N, int M, int (*compareXY)()) { 
   /*
     |------------------------|
     N                        M 
@@ -339,14 +277,16 @@ int partitionLeft(int N, int M) {
 
 void *partitionThreadLeft(void *ptr) {
   struct task *tx = ( struct task * ) ptr;
+  void **A = getA(tx);
   int n = getN(tx);
   int m = getM(tx);
   // int T = getDL(tx);
-  int ix = partitionLeft(n, m);
+  int (*compare)() = getXY(tx);
+  int ix = partitionLeft(A, n, m, compare);
   setN(tx, ix);
 } // end partitionThreadLeft
 
-int partitionRight(int N, int M) { 
+int partitionRight(void **A, int N, int M, int (*compareXY)()) { 
   /*
     |------------------------|
     N                        M 
@@ -374,17 +314,19 @@ int partitionRight(int N, int M) {
 
 void *partitionThreadRight(void *ptr) {
   struct task *tx = ( struct task * ) ptr;
+  void **A = getA(tx);
   int n = getN(tx);
   int m = getM(tx);
   // int T = getDL(tx);
-  int ix = partitionRight(n, m);
+  int (*compare)() = getXY(tx);
+  int ix = partitionRight(A, n, m, compare);
   setN(tx, ix);
 } // end partitionThreadRight
 
 
 int cut2S2Limit = 2000;
-void foursort(void **AA, int size, 
-	int (*compar ) (const void *, const void * ),
+void foursort(void **A, int size, 
+	int (*compareXY) (const void *, const void * ),
 	int numberOfThreads) {
   /*
   // Set host & licence expiration date
@@ -424,10 +366,10 @@ void foursort(void **AA, int size,
   }
   */
   // Proceed !
-  A = AA;
-  compareXY = compar;
+  // A = AA;
+  // compareXY = compar;
   if ( size <= cut2S2Limit || numberOfThreads <= 1) {
-    quicksort0(0, size-1);
+    quicksort0(A, 0, size-1, compareXY);
     return;
   }
   sleepingThreads = 0;
@@ -473,7 +415,7 @@ void foursort(void **AA, int size,
   // if ( T <= A[N] || A[M] < T ) {
   if ( compareXY(T, A[N]) <= 0 || compareXY(A[M], T) < 0 ) {
     // cannot do first parallel partition
-    struct task *t = newTask(0, size-1, depthLimit);
+    struct task *t = newTask(A, 0, size-1, depthLimit, compareXY);
     addTaskSynchronized(ll, t);
   } else {
     /*
@@ -482,8 +424,8 @@ void foursort(void **AA, int size,
       A[N] < T             A[e3] = T                 T<=A[M]
     */
 
-    struct task *t1 = newTask(N, e3, 0);
-    struct task *t2 = newTask(e3, M, 0);
+    struct task *t1 = newTask(A, N, e3, 0, compareXY);
+    struct task *t2 = newTask(A, e3, M, 0, compareXY);
     int errcode;
     if ( (errcode=pthread_create(&thread_id[1], NULL, 
 				 partitionThreadLeft, (void*) t1) )) {
@@ -527,9 +469,9 @@ void foursort(void **AA, int size,
       |------------------------][----------------------------|
       N           <           m3           >=                M
      */
-    t1 = newTask(N, m3, depthLimit);
+    t1 = newTask(A, N, m3, depthLimit, compareXY);
     addTaskSynchronized(ll, t1);
-    t1 = newTask(m3+1, M, depthLimit);
+    t1 = newTask(A, m3+1, M, depthLimit, compareXY);
     addTaskSynchronized(ll, t1);
   }
  // printf("Entering sortArray\n");
@@ -537,7 +479,7 @@ void foursort(void **AA, int size,
   int errcode;
   for ( i = 0; i < NUMTHREADS; i++ ) {
     if ( errcode=pthread_create(&thread_id[i], NULL, 
-				sortThread, (void*) A) ) {
+				sortThread, (void *)A ) ) {
       errexit(errcode,"ParSort/ sortArray()/pthread_create");
     }
   }

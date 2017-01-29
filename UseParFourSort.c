@@ -111,7 +111,8 @@ void validateXYZ();
 void testFourSort();
 void testFourSort2();
 void timeTest();
-void dflgm(int N, int M, int pivotx, void (*cut)(), int depthLimit);
+void dflgm(void **A, int N, int M, int pivotx, void (*cut)(), 
+	   int depthLimit, int (*compar ) ());
 void compareFoursortAgainstCut2();
 void callCut2(void **AA, int siz, int (*compar ) () );
 void validateFourSortBT(); // validation on the Bentley bench test against heapsort
@@ -506,134 +507,25 @@ void compareFoursortAgainstCut2() {
 
 
 // Here are the global entities used throughout
-int (*compareXY)();
-void **A;
+// int (*compareXY)();
+// void **A;
 
 // The next lines up to the include makes the inclusion of cut2 obsolete
-const int cut2Limit = 127;
-void quicksort0(int N, int M);
-void quicksort0c(int N, int M, int depthLimit);
+// const int cut2Limit = 127;
+void quicksort0(void **A, int N, int M, int (*compare)());
+void quicksort0c(void **A, int N, int M, int depthLimit, int (*compare)());
 void iswap(int p, int q, void **A);
-void heapc(void **A, int N, int M);
-#include "C2sort"
+void heapc(void **A, int N, int M, int (*compare)());
+void cut2();
+#include "C2sort.c"
 
-/*
-const int cut2Limit = 127;
-void quicksort0(int N, int M);
-void cut2c();
-// cut2 is support function to call cut2C, which is (like) FourSort
-void cut2(int N, int M) {
-  // printf("cut2 %d %d \n", N, M);
-  int L = M - N;
-  if ( L < cut2Limit ) { 
-    quicksort0(N, M);
-    return;
-  }
-  int depthLimit = 2.5 * floor(log(L));
-  cut2c(N, M, depthLimit);
-} // end cut2
-
-void quicksort0c(int N, int M, int depthLimit);
-void iswap(int p, int q, void **A);
-// cut2c is (like) FourSort
-void cut2c(int N, int M, int depthLimit) {
-	int L;
- Loop:
-	L = M-N;
-	if ( L <= cut2Limit ) { 
-	  quicksort0c(N, M, depthLimit);
-	  return;
-	}
-
-	depthLimit--;
-
-	// Check for duplicates
-        int sixth = (L + 1) / 6;
-        int e1 = N  + sixth;
-        int e5 = M - sixth;
-        int e3 = (N+M) / 2; // The midpoint
-        int e4 = e3 + sixth;
-        int e2 = e3 - sixth;
-
-        // Sort these elements using a 5-element sorting network
-        void *ae1 = A[e1], *ae2 = A[e2], *ae3 = A[e3], *ae4 = A[e4], *ae5 = A[e5];
-	void *t;
-        // if (ae1 > ae2) { t = ae1; ae1 = ae2; ae2 = t; }
-
-	if ( 0 < compareXY(ae1, ae2) ) { t = ae1; ae1 = ae2; ae2 = t; } // 1-2
-	if ( 0 < compareXY(ae4, ae5) ) { t = ae4; ae4 = ae5; ae5 = t; } // 4-5
-	if ( 0 < compareXY(ae1, ae3) ) { t = ae1; ae1 = ae3; ae3 = t; } // 1-3
-	if ( 0 < compareXY(ae2, ae3) ) { t = ae2; ae2 = ae3; ae3 = t; } // 2-3
-	if ( 0 < compareXY(ae1, ae4) ) { t = ae1; ae1 = ae4; ae4 = t; } // 1-4
-	if ( 0 < compareXY(ae3, ae4) ) { t = ae3; ae3 = ae4; ae4 = t; } // 3-4
-	if ( 0 < compareXY(ae2, ae5) ) { t = ae2; ae2 = ae5; ae5 = t; } // 2-5
-	if ( 0 < compareXY(ae2, ae3) ) { t = ae2; ae2 = ae3; ae3 = t; } // 2-3
-	if ( 0 < compareXY(ae4, ae5) ) { t = ae4; ae4 = ae5; ae5 = t; } // 4-5
-	// ... and reassign
-	A[e1] = ae1; A[e2] = ae2; A[e3] = ae3; A[e4] = ae4; A[e5] = ae5;
-
-	// Fix end points
-	if ( compareXY(ae1, A[N]) < 0 ) iswap(N, e1, A);
-	if ( compareXY(A[M], ae5) < 0 ) iswap(M, e5, A);
-
-	register void *T = ae3; // pivot
-
-	// check Left label invariant
-	// if ( T <= A[N] || A[M] < T ) {
-	if ( compareXY(T, A[N]) <= 0 || compareXY(A[M], T) < 0) {
-	   // give up because cannot find a good pivot
-	   // dflgm is a dutch flag type of algorithm
-	   void cut2c();
-	   dflgm(N, M, e3, cut2c, depthLimit);
-	   return;
-	 }
-
-	register int I, J; // indices
-	register void *AI, *AJ; // array values
-
-	// initialize running indices
-	I= N;
-	J= M;
-
-	// The left segment has elements < T
-	// The right segment has elements >= T
-
-  Left:
-	// I = I + 1;
-	// AI = A[I];
-	// if (AI < T) goto Left;
-	// if ( compareXY(AI,  T) < 0 ) goto Left;
-	while ( compareXY(A[++I],  T) < 0 ); AI = A[I];
- // Right:
-	// J = J - 1;
-	// AJ = A[J];
-	// if ( T <= AJ ) goto Right;
-	// if ( compareXY(T, AJ) <= 0 ) goto Right;
-	while ( compareXY(T, A[--J]) <= 0 ); AJ = A[J];
-	if ( I < J ) {
-	  A[I] = AJ; A[J] = AI;
-	  goto Left;
-	}
-	// Tail iteration
-	if ( (I - N) < (M - J) ) { // smallest one first
-	  cut2c(N, J, depthLimit);
-	    // cut2(I, M);
-	    N = I;
-	    goto Loop;
-	}
-	cut2c(I, M, depthLimit);
-	// cut2(N, J);
-	M = J;
-	goto Loop;
-    } // (*  OF cut2c; *) ... the brackets remind that this was Pascal code
-*/
 
 // invoking 3-layered quicksort
-void callCut2(void **AA, int siz, 
+void callCut2(void **A, int siz, 
 	  int (*compar ) (const void *, const void * ) ) {
-  A = AA;
-  compareXY = compar;
-  cut2(0, siz-1);
+  // A = AA;
+  // compareXY = compar;
+  cut2(A, 0, siz-1, compar);
 } // end callCut2
 
 // Here infrastructure for the Bentley test-bench
@@ -656,7 +548,7 @@ void reverseBack(void **A, int n) {
   reverse2(A, n/2, n-1);
 } // end reverseBack
 
-void **A;
+// void **A;
 int (*compareXY)();
 void tweakSort(void **AA, int n) {
   /*
@@ -791,8 +683,7 @@ void slopes(void **A, int n, int m, int tweak) {
 void heapSort();
 void callHeapSort(void **A, int size, 
 	 int (*compar ) (const void *, const void * ) ) {
-  compareXY = compar;
-  heapSort(A, size);
+  heapSort(A, size, compar);
 } // end callHeapSort
 
 void validateFourSortBT() {  // validation on the Bentley bench test against heapsort

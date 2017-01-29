@@ -57,20 +57,22 @@ OTHER DEALINGS WITH THE SOFTWARE OR DOCUMENTATION.
 #include <string.h>
 #include <math.h>
 
-const int cut2Limit = 127;
+// const int cut2Limit = 127;
 
 char* expiration = "*** License for foursort has expired ...\n";
 
 // Here more global entities used throughout
-int (*compareXY)();
-void **A;
+// int (*compareXY)();
+// void **A;
 
 // the members of FourSort
-#include "Isort"
-#include "Hsort"
-#include "Qusort"
-#include "Dsort"
-#include "C2sort"
+/*
+#include "Isort.c"
+#include "Hsort.c"
+*/
+#include "Qusort.c" // quicksort member
+#include "Dsort.c"  // dflgm member
+#include "C2sort.c" // cut2 member
 
 void foursort(void **AA, int size, 
 	int (*compar ) (const void *, const void * ) ) {
@@ -112,9 +114,9 @@ void foursort(void **AA, int size,
   }
   */
   // Proceed !
-  A = AA;
-  compareXY = compar;
-  cut2(0, size-1);
+  // A = AA;
+  // compareXY = compar;
+  cut2(AA, 0, size-1, compar);
 }
 /* compile with: 
    gcc -c FourSort.c

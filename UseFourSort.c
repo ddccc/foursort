@@ -123,8 +123,8 @@ void dflgm();
     float valf;
   };
 
-void **A;
-int (*compareXY)();
+// void **A;
+// int (*compareXY)();
 
 // Here an exmple comparison function for these objects:
 // **** NOTE, again **** 
@@ -161,11 +161,11 @@ int main (int argc, char *argv[]) {
      // testQsort();
      // testBentley();
   // validateHeapSort();
-  // validateFourSort();
-  // validateMyQS();
+  validateFourSort();
+  validateMyQS();
   // validateQsort();
   // validateBentley();
-  // validateDFLGM();
+  validateDFLGM();
   // Measure the sorting time of an algorithm
   // timeTest();
   // Compare the outputs of two sorting algorithms
@@ -186,7 +186,7 @@ int main (int argc, char *argv[]) {
      // compareDFLGMAgainstFourSort();
      // compareXYZAgainstFourSortBT(); // using the Bentley test-bench
      // validateFourSortBT(); // against heapsort on Bentley test-bench
-     compare00QxAgainstFourSort();
+     // compare00QxAgainstFourSort();
      // compare00LQAgainstFourSort();
      // compare00BentleyAgainstFourSort();
      // compare00ChenAgainstFourSort();
@@ -246,8 +246,7 @@ void check(void **A, int N, int M) {
 void heapSort();
 void callHeapsort(void **A, int size, 
 	 int (*compar ) (const void *, const void * ) ) {
-  compareXY = compar;
-  heapSort(A, size);
+  heapSort(A, size, compar);
 } // end callHeapsort
 
 // testAlgorithm0 is a generalization of testFoursort;
@@ -622,12 +621,10 @@ void compareQuicksort0AgainstFoursort() {
   compareAlgorithms("Compare quicksort0 vs foursort", callQuicksort0, foursort);
 }
 
-void quicksort0(int N, int M);
-void callQuicksort0(void **AA, int size, 
+void quicksort0(void **A, int N, int M, int (*compar )());
+void callQuicksort0(void **A, int size, 
 	int (*compar ) (const void *, const void * ) ) {
-  A = AA;
-  compareXY = compar;
-  quicksort0(0, size-1);
+  quicksort0(A, 0, size-1, compar);
 } // end callQuicksort0
 
 void compareMyQSAgainstFourSort() {
@@ -636,42 +633,41 @@ void compareMyQSAgainstFourSort() {
   // compareAlgorithms("Compare myqs vs foursort", foursort, callMyQS);
 } // end compareMyQSAgainstFourSort
 
-void callMyQS(void **AA, int size, 
+void callMyQS(void **A, int size, 
 	int (*compar ) (const void *, const void * ) ) {
-  A = AA;
-  compareXY = compar;
-  myqs(0, size-1);
+  myqs(A, 0, size-1, compar);
 } // end callMyQS
 
 void myqsc();
-void myqs(int N, int M) {
+void myqs(void **A, int N, int M, int (*compar )) {
   int L = M-N;
   if (L <= 0) return;
   int dp = 2.5 * floor(log(L));
-  myqsc(N, M, dp);
+  myqsc(A, N, M, dp, compar);
 }
 // void dflgm();
 // void heapc();
 // void quicksort0c();
-void myqsc(int N, int M, int depthLimit) {
+void myqsc(void **A, int N, int M, 
+	   int depthLimit, int (*compareXY)()) {
   int L;
  again:
   // printf("myqs N %i M %i\n", N, M);
   L = M - N;
   // if ( L <= 0 ) return;
   if ( L <= 10 ) { 
-    insertionsort(N, M);
+    insertionsort(A, N, M, compareXY);
     return;
   }
   /*
   if ( L < 127 ) { 
-    quicksort0c(N, M, depthLimit);
+    quicksort0c(A, N, M, depthLimit, compareXY);
     return;
   }
   */
 
   if ( depthLimit <= 0 ) {
-    heapc(A, N, M);
+    heapc(A, N, M, compareXY);
     return;
   }
   depthLimit--;
@@ -679,7 +675,7 @@ void myqsc(int N, int M, int depthLimit) {
   /*
     // 10 < L
     // grab median of 3 or 9 to get a good pivot
-    int pm = (N+M)/2;
+    int pm = N + L/2; // (N+M)/2;
     int pl = N;
     int pn = M;
     if (L > 40) { // do median of 9
@@ -694,7 +690,7 @@ void myqsc(int N, int M, int depthLimit) {
         int sixth = (L + 1) / 6;
         int e1 = N  + sixth;
         int e5 = M - sixth;
-        int e3 = (N+M) / 2; // The midpoint
+        int e3 = N + L/2; // (N+M) / 2; // The midpoint
         int e4 = e3 + sixth;
         int e2 = e3 - sixth;
 
@@ -728,7 +724,7 @@ void myqsc(int N, int M, int depthLimit) {
 	   // give up because cannot find a good pivot
 	   // dflgm is a dutch flag type of algorithm
 	  void myqsc();
-	  dflgm(N, M, e3, myqsc, depthLimit);
+	  dflgm(A, N, M, e3, myqsc, depthLimit, compareXY);
 	  return;
 	}
 
@@ -743,28 +739,24 @@ void myqsc(int N, int M, int depthLimit) {
     while ( compareXY(A[++i], pv) < 0 );
     if ( i < j ) { t = A[i]; A[i] = A[j]; A[j] = t; goto loop; }
     if ( i-N < M-i ) { // order the sub-segments
-      myqs(N, j); // myqs(A, i+1, M); 
+      myqsc(A, N, j, depthLimit, compareXY); // myqs(A, i+1, M); 
       N = i; goto again;
     } else {
-      myqs(i, M); // myqs(A, N, i-1); 
+      myqsc(A, i, M, depthLimit, compareXY); // myqs(A, N, i-1); 
       M = j; goto again;
     }
 } // end myqsc
 
 
-void cut2(int N, int M);
-void callCut2(void **AA, int size, 
+void cut2(void **A, int N, int M, int (*compareXY)());
+void callCut2(void **A, int size, 
 	int (*compar ) (const void *, const void * ) ) {
-  A = AA;
-  compareXY = compar;
-  cut2(0, size-1);
+  cut2(A, 0, size-1, compar);
 } // end callCut2
 
-void dflgm2(int N, int M);
-void callDflgm2(void **AA, int size, int (*compar ) () ) {
-  A = AA;
-  compareXY = compar;
-  dflgm2(0, size-1);
+void dflgm2(void **A, int N, int M, int (*compar )());
+void callDflgm2(void **A, int size, int (*compar )() ) {
+  dflgm2(A, 0, size-1, compar);
 } // end callDflgm2
 
 
@@ -2035,30 +2027,30 @@ void compareXYZAgainstFourSortBT() {
   }
 } // end compareXYZAgainstFourSortBT
 
-void dflgmc(int N, int M, int depthLimit);
-void dflgm2(int N, int M) {
+void dflgmc(void **A, int N, int M, int depthLimit, int (*compareXY)());
+void dflgm2(void **A, int N, int M, int (*compareXY)()) {
   // printf("dflgm2 N %i M %i\n", N, M);
   int L = M - N;
   int depthLimit = 2.5 * floor(log(L));
-  dflgmc(N, M, depthLimit);
+  dflgmc(A, N, M, depthLimit, compareXY);
 } // end dflgm2
 
-void dflgmc(int N, int M, int depthLimit) {
+void dflgmc(void **A, int N, int M, int depthLimit, int (*compareXY)()) {
   // printf("dflgmc N %i M %i depthLimit %i\n", N, M, depthLimit);
   if ( depthLimit <= 0 ) {
-    heapc(A, N, M);
+    heapc(A, N, M, compareXY);
     return;
   }
   int L = M - N;
   if ( L < 50 ) { 
-    quicksort0c(N, M, depthLimit);
+    quicksort0c(A, N, M, depthLimit, compareXY);
     return;
   }
   depthLimit--;
   /*
     int pn = N;
     int pm = M;
-    int p0 = (pn+pm)/2;
+    int p0 = pn + L/2; // (pn+pm)/2;
     int d = L/8;
     pn = med(A, pn, pn + d, pn + 2 * d, compareXY);
     p0 = med(A, p0 - d, p0, p0 + d, compareXY);
@@ -2093,7 +2085,7 @@ void dflgmc(int N, int M, int depthLimit) {
 	if ( compareXY(ae1, A[N]) < 0 ) iswap(N, e1, A);
 	if ( compareXY(A[M], ae5) < 0 ) iswap(M, e5, A);
 
-	dflgm(N, M, e3, dflgmc, depthLimit);
+	dflgm(A, N, M, e3, dflgmc, depthLimit, compareXY);
 
 } // end dflgmc
  
