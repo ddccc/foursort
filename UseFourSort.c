@@ -59,6 +59,13 @@ OTHER DEALINGS WITH THE SOFTWARE OR DOCUMENTATION.
    The main function has many alternative functions.
    Un-comment one to activate.
    Inside such a function are often other choices that can be selected.
+
+   Thu Dec 21 11:20:02 2017
+   There is more hybridization. 
+   -- quicksort0 has been replaced by a version that is a hybrid also
+   -- cut2f has been added and is the main function; it calls cut2 when it
+      encounters trouble and delegates to quicksort0 for short arrays
+
  */
 
 #include <stdio.h>
@@ -82,6 +89,7 @@ void callChensort(void **A, int size, int (*compar ) () );
 void callMyQS(void **A, int size, int (*compar ) () ); 
 void testQsort();
 void testQuicksort0();
+void testIntroSort();
 void testDFLGM();
 void testFourSort();
 void testBentley();
@@ -90,8 +98,10 @@ void validateHeapSort();
 void validateFourSort();
 void validateMyQS();
 void validateBentley();
+void validateChensort();
 void validateFourSortBT();
 void validateDFLGM();
+void validateIntroSort();
 void timeTest();
 void compareQsortAgainstQuicksort0();
 void compareQsortAgainstFourSort();
@@ -99,6 +109,7 @@ void compareQuicksort0AgainstFourSort();
 void compareMyQSAgainstFourSort();
 void compareLQAgainstFourSort(); // LQ is ako qsort in the Linux C-library
 void compareBentleyAgainstFourSort(); 
+void compareBentleyAgainstQuicksort0(); 
 void compareChenSortAgainstFourSort();
 void compareDFLGMAgainstQuicksort0();
 void compareDFLGMAgainstFourSort();
@@ -106,7 +117,7 @@ void compare00QxAgainstFourSort();
 void compare00LQAgainstFourSort();
 void compare00BentleyAgainstFourSort();
 void compare00ChenAgainstFourSort();
-void compareXYZAgainstFourSortBT();
+void compareXYZAgainstFourSortBT();  // using the Bentley test bench
 int clock();
 void insertionsort(); 
 void heapc();
@@ -114,6 +125,7 @@ void quicksort0c();
 void myqs();
 void iswap();
 void dflgm();
+void introsort();
 
 // Example of objects that can be used to populate an array to be sorted:
   // To obtain the int field from X: ((struct intval *) X)->val
@@ -155,17 +167,21 @@ int main (int argc, char *argv[]) {
   // To ask for the license expiration date and the host
      // foursort(0, 0, 0);
   // To check that a sorted array is produced
-     // testQuicksort0();
-     // testFourSort(); 
+  // testQuicksort0();
+  // testFourSort(); 
      // testDFLGM(); 
      // testQsort();
      // testBentley();
+  // void introsort(void **A, int N, int M, int (*compare)())
+  // testIntroSort();
   // validateHeapSort();
-  validateFourSort();
-  validateMyQS();
+  // validateFourSort();
+  // validateMyQS();
   // validateQsort();
   // validateBentley();
-  validateDFLGM();
+  // validateChensort();
+  // validateDFLGM();
+  // validateIntroSort();
   // Measure the sorting time of an algorithm
   // timeTest();
   // Compare the outputs of two sorting algorithms
@@ -181,6 +197,7 @@ int main (int argc, char *argv[]) {
      // compareQsortAgainstFourSort();
      // compareLQAgainstFourSort(); // LQ is qsort in the Linux C-library
      // compareBentleyAgainstFourSort();
+     compareBentleyAgainstQuicksort0();
      // compareChenSortAgainstFourSort();
      // compareDFLGMAgainstQuicksort0();
      // compareDFLGMAgainstFourSort();
@@ -207,11 +224,29 @@ void fillarray(void **A, int lng, int startv) {
   int i;
   srand(startv);
   struct intval *pi;
+  const int range = 1024*1024*32;
+  // /*
   for ( i = 0; i < lng; i++) {
     pi = (struct intval *)A[i];
-    const int range = 1024*1024*32; pi->val = rand()%range; 
+    pi->val = rand()%range; 
     // pi->val = 0; 
   }
+  // */
+  /*
+  int percentage = 50; // adjust [0,100] to get that percentage on noise
+  int v, v2, r, sign = 0;
+    for ( i = 1; i < lng; i++) {
+      pi = (struct intval *)A[i];
+      if ( 0 == percentage ) pi->val = 0; else {
+	v = rand()%range;
+	sign = v%2;
+	v2 = (sign) ? v : -v;
+	r = v%100;
+	pi->val = (r <= percentage) ? v2 : 0;
+      }
+  }
+  */
+
   /*
   // for testing dflgm:
   int val = 1000000000;
@@ -228,6 +263,7 @@ void fillarray(void **A, int lng, int startv) {
 // Check that adjacent objects in an array are ordered.
 // If not, it reports an error 
 void check(void **A, int N, int M) {
+  printf("Running check N %i M %i \n", N, M);
   int i; int cnt = 0;
   void *x, *y;
   struct intval *pi;
@@ -235,8 +271,9 @@ void check(void **A, int N, int M) {
     x = A[i-1]; y = A[i];
     if ( compareIntVal(y, x) < 0 ) {
       pi = (struct intval *) y;
-      printf("%s %d %s %d %s", "Error at: ", i, 
+      printf("%s %d %s %d %s\n", "Error at: ", i, 
 	     " A[i]: ", pi->val, "\n");
+      exit(0);
       cnt++;
     }
   }
@@ -286,7 +323,8 @@ void testAlgorithm2(char* label, int siz, void (*alg1)() ) {
 
 // like testAlgorithm0 but the size of array is preset inside testAlgorithm
 void testAlgorithm(char* label, void (*alg1)() ) {
-  testAlgorithm0(label, 1024*1024, alg1);
+  //  testAlgorithm0(label, 1024*1024, alg1);
+  testAlgorithm0(label, 1024*8, alg1);
 } // end testAlgorithm0
 
 // /* Example: use of testAlgorithm
@@ -302,8 +340,10 @@ void testDFLGM() {
 
 void testQuicksort0() {
   void callQuicksort0();
-  testAlgorithm0("Check quicksort0()", 1024*1024, callQuicksort0);
-} // end testQuicksort0()
+  // testAlgorithm0("Check quicksort0()", 1024*1024, callQuicksort0);
+  // testAlgorithm0("Check quicksort0()", 101, callQuicksort0);
+  testAlgorithm0("Check quicksort0()", 10000, callQuicksort0);
+} // end testQuicksort0() 
 
 void testQsort() {
   void callQsort();
@@ -313,7 +353,14 @@ void testQsort() {
 void testBentley() {
   void callBentley();
   testAlgorithm2("Check callBentley()", 1024*1024, callBentley);
+  // testAlgorithm2("Check callBentley()", 50, callBentley);
 }
+
+void testIntroSort() {
+  void callIntroSort();
+  testAlgorithm0("Check introSort()", 1024*1025*16, callIntroSort); // problem
+  // testAlgorithm0("Check introSort()", 1024*128, callIntroSort);
+} // end testIntroSort()
 
 // validateAlgorithm0 is used to check algorithm alg2 against a
 // trusted algorithm alg1.
@@ -380,6 +427,7 @@ void validateAlgorithm0(char* label, int siz, void (*alg1)(), void (*alg2)() ) {
 // Like validateAlgorithm0 but with fixed array size
 void validateAlgorithm(char* label, void (*alg1)(), void (*alg2)() ) {
   validateAlgorithm0(label, 1024 * 1024 * 16, alg1, alg2);
+  // validateAlgorithm0(label, 1024*1024, alg1, alg2);
 } // end validateAlgorithm
 
 /* Example:: replace XYZ by what you want to validate
@@ -411,6 +459,13 @@ void validateDFLGM() {
   validateAlgorithm("Running validate DFLGM ...",
 		    callQuicksort0, callDflgm2);
 }
+
+void validateIntroSort() {
+  void callQuicksort0(), callIntroSort();
+  validateAlgorithm("Running validate introSort...",
+		    callQuicksort0, callIntroSort);
+}
+
 // Note:
 //      alg1 is using the comparison function compareIntVal
 //      alg2 is using the comparison function compareIntVal2
@@ -468,8 +523,14 @@ void validateQsort() {
 
 void validateBentley() {
   void callQuicksort0(), callBentley();
-  validateAlgorithm1("Running validate bentley ...",  1024 * 1024,
+  validateAlgorithm1("Running validate bentley  ...",  1024 * 1024,
 		    callQuicksort0, callBentley);
+}
+
+void validateChensort() {
+  void callQuicksort0(), callChensort();
+  validateAlgorithm1("Running validate Chensort ...",  1024 * 1024 *16,
+		     callQuicksort0, callChensort);
 }
 
 // Run an algorithm and report the time used
@@ -586,8 +647,11 @@ void compareAlgorithms00(char *label, int siz, int seedLimit,
       free(A[i]);
     };
     free(A);
-    siz = siz * 2;
-    seedLimit = seedLimit / 2;
+    siz = siz * 4;
+    seedLimit = seedLimit / 4;
+    // siz = siz * 2;
+    // seedLimit = seedLimit / 2;
+
   }
 } // end compareAlgorithms00
 
@@ -626,6 +690,11 @@ void callQuicksort0(void **A, int size,
 	int (*compar ) (const void *, const void * ) ) {
   quicksort0(A, 0, size-1, compar);
 } // end callQuicksort0
+
+void callIntroSort(void **A, int size, 
+	int (*compar ) (const void *, const void * ) ) {
+  introsort(A, 0, size-1, compar);
+} // end callIntroSort
 
 void compareMyQSAgainstFourSort() {
   void foursort(), callMyQS();
@@ -748,10 +817,10 @@ void myqsc(void **A, int N, int M,
 } // end myqsc
 
 
-void cut2(void **A, int N, int M, int (*compareXY)());
+void cut2f(void **A, int N, int M, int (*compareXY)());
 void callCut2(void **A, int size, 
 	int (*compar ) (const void *, const void * ) ) {
-  cut2(A, 0, size-1, compar);
+  cut2f(A, 0, size-1, compar);
 } // end callCut2
 
 void dflgm2(void **A, int N, int M, int (*compar )());
@@ -786,10 +855,17 @@ void compareLQAgainstFourSort() { // LQ is qsort in the Linux C-library
 
 void compareBentleyAgainstFourSort() { 
   void callBentley(), callCut2();
-   // compareAlgorithms2("Compare bentley vs cut2", 1024, 32 * 1024,
-   compareAlgorithms2("Compare bentley vs cut2", 1024 * 1024, 32,
+   compareAlgorithms2("Compare bentley vs cut2", 1024, 32 * 1024,
+   // compareAlgorithms2("Compare bentley vs cut2", 1024 * 1024, 32,
 		      callBentley, callCut2);
 } // end compareBentleyAgainstFourSort
+
+void compareBentleyAgainstQuicksort0() { 
+  void callBentley(), callQuicksort0();
+   compareAlgorithms2("Compare bentley vs quicksort0", 1024, 32 * 1024,
+   // compareAlgorithms2("Compare bentley vs quicksort0", 1024 * 1024, 32,
+		      callBentley, callQuicksort0);
+} // end compareBentleyAgainstQuicksort0
 
 void compareChenSortAgainstFourSort() { 
   void callChensort(), callCut2();
@@ -1016,7 +1092,7 @@ static inline void swapfunc(a, b, n, swaptype)
 
 #define swap(a, b)					\
 	if (swaptype == 0) {				\
-		long t = *(long *)(a);			\
+	  long t = *(long *)(a);			\
 		*(long *)(a) = *(long *)(b);		\
 		*(long *)(b) = t;			\
 	} else						\
@@ -1047,6 +1123,7 @@ void bentley(a, n, es, cmp)
   // int swap_cnt; 
 
 loop:	SWAPINIT(a, es);
+  // printf("bentley n: %i es %i\n", n, es);
   // swap_cnt = 0;
 	if (n < 7) {
 		for (pm = (char *) a + es; pm < (char *) a + n * es; pm += es)
@@ -1067,12 +1144,15 @@ loop:	SWAPINIT(a, es);
 		}
 		pm = med33(pl, pm, pn, cmp);
 	}
+	// printf("pivot is at: %i\n", pm - (char *)a);
 	swap(a, pm);
 	pa = pb = (char *) a + es;
 
 	pc = pd = (char *) a + (n - 1) * es;
 	for (;;) {
 		while (pb <= pc && (r = cmp(pb, a)) <= 0) {
+		  // printf("Inside 1st loop N2 %i I %i\n",
+		  //	 (pa- (char *)a)/es, (pb- (char *)a)/es);
 			if (r == 0) {
 			        // swap_cnt = 1;
 				swap(pa, pb);
@@ -1080,6 +1160,8 @@ loop:	SWAPINIT(a, es);
 			}
 			pb += es;
 		}
+	        // printf("After 1st loop N2 %i I %i\n",
+		//       (pa- (char *)a)/es, (pb- (char *)a)/es);
 		while (pb <= pc && (r = cmp(pc, a)) >= 0) {
 			if (r == 0) {
 			        // swap_cnt = 1;
@@ -1090,6 +1172,8 @@ loop:	SWAPINIT(a, es);
 		}
 		if (pb > pc)
 			break;
+		// printf("swap N %i I %i J %i M %i \n", 
+		//       0, (pb- (char *)a )/es, (pc- (char *)a)/es, 0);
 		swap(pb, pc);
 		// swap_cnt = 1;
 		pb += es;
@@ -1107,8 +1191,10 @@ loop:	SWAPINIT(a, es);
 
 	pn = (char *) a + n * es;
 	r = min(pa - (char *)a, pb - pa);
+	// printf("l %i r %i r %i \n", (pa - (char *)a)/es, (pb - pa)/es, r);
 	vecswap(a, pb - r, r);
 	r = min(pd - pc, pn - pd - es);
+	// printf("l %i r %i r %i\n", (pd - pc)/es, (pn - pd - es)/es, r);
 	vecswap(pb, pn - r, r);
 	/* Ordering on the recursive calls has been added to obtain at most 
 	   log2(N) stack space 
@@ -1188,9 +1274,8 @@ void validateFourSortBT() {
       // sortcBCntx = cut2Cntx = sumQsortBx = sumCut2x = 0;
       for (m = 1; m < 2 * siz; m = m * 2) {
       // m = 1024 * 1024; {
-      // m = 1; {
       	for (tweak = 0; tweak <= 5; tweak++ ) {
-	// tweak = 5; {
+	  // tweak = 4; {
 	  sortcBTime = 0; cut2Time = 0;
 	  TFill = clock();
 	  for (seed = 0; seed < seedLimit; seed++) 
@@ -1345,8 +1430,8 @@ void compareZeros00(char *label, int siz, int seedLimit,
 		   int (*compare1)(), int (*compare2)() ) {
   printf("%s on size: %d seedLimit: %d\n", label, siz, seedLimit);
   int seed;
-  // int limit = 1024 * 1024 * 16 + 1;
-  int limit = 1024 * 1024 + 1;
+  int limit = 1024 * 1024 * 16 + 1;
+  // int limit = 1024 * 1024 + 1;
   while (siz <= limit) {
     printf("%s %d %s %d %s", "siz: ", siz, " seedLimit: ", seedLimit, "\n");
     struct intval *pi;
@@ -1364,8 +1449,16 @@ void compareZeros00(char *label, int siz, int seedLimit,
     // for (p = 0; p < 101; p = p + 20 )  // percentages of random elements
     //   testNonRandom(p, A, siz, seedLimit, alg1, alg2, compare1, compare2);
     testNonRandom(0, A, siz, seedLimit, alg1, alg2, compare1, compare2);
-    testNonRandom(20, A, siz, seedLimit, alg1, alg2, compare1, compare2);
-    testNonRandom(40, A, siz, seedLimit, alg1, alg2, compare1, compare2);
+    testNonRandom(1, A, siz, seedLimit, alg1, alg2, compare1, compare2);
+    testNonRandom(2, A, siz, seedLimit, alg1, alg2, compare1, compare2);
+    testNonRandom(4, A, siz, seedLimit, alg1, alg2, compare1, compare2);
+    testNonRandom(8, A, siz, seedLimit, alg1, alg2, compare1, compare2);
+    testNonRandom(16, A, siz, seedLimit, alg1, alg2, compare1, compare2);
+    testNonRandom(32, A, siz, seedLimit, alg1, alg2, compare1, compare2);
+    testNonRandom(64, A, siz, seedLimit, alg1, alg2, compare1, compare2);
+
+    // testNonRandom(20, A, siz, seedLimit, alg1, alg2, compare1, compare2);
+    // testNonRandom(40, A, siz, seedLimit, alg1, alg2, compare1, compare2);
     // testNonRandom(100, A, siz, seedLimit, alg1, alg2, compare1, compare2);
 
     // free array
@@ -1398,7 +1491,9 @@ void compare00LQAgainstFourSort() {
 void compare00BentleyAgainstFourSort() {
   void callBentley(), foursort();
   compareZeros00("compare00BentleyAgainstFoursort", 
-		 1024*1024, 16, callBentley, foursort, 
+		 // 1024*1024, 16, 
+		 1024*1024*16, 2, 
+		 callBentley, foursort, 
 		 compareIntVal2, compareIntVal);
 } // end compare00BentleyAgainstFourSort
 
@@ -1910,8 +2005,9 @@ void compareXYZAgainstFourSortBT() {
   // int limit = 1024 * 1024 * 16 + 1;
   // int seedLimit = 32 * 1024;
   int limit = siz + 1;
-  int seedLimit = 32;
-  // int seedLimit = 1;
+  // int seedLimit = 32;
+  // int seedLimit = 5;
+  int seedLimit = 1;
   float frac;
   while (siz <= limit) {
     printf("%s %d %s %d %s", "siz: ", siz, " seedLimit: ", seedLimit, "\n");
@@ -1939,7 +2035,7 @@ void compareXYZAgainstFourSortBT() {
       // sortcBCntx = cut2Cntx = sumQsortBx = sumCut2x = 0;
       for (m = 1; m < 2 * siz; m = m * 2) {
       // m = 1024 * 1024; {
-      // m = 1; {
+      // m = 2; {
       	for (tweak = 0; tweak <= 5; tweak++ ) {
 	  if (4 == tweak) continue; // due to bias 
 	  sortcBTime = 0; cut2Time = 0;
@@ -1947,8 +2043,8 @@ void compareXYZAgainstFourSortBT() {
 	  for (seed = 0; seed < seedLimit; seed++) 
 	    // sawtooth(A, siz, m, tweak);
 	    // rand2(A, siz, m, tweak, seed);
-	    // plateau(A, siz, m, tweak);
-	    // shuffle(A, siz, m, tweak, seed);
+	    // plateau(A, siz, m, tweak); // not used
+	    // shuffle(A, siz, m, tweak, seed); // not used
 	    // stagger(A, siz, m, tweak);
 	    slopes(A, siz, m, tweak);
 	  TFill = clock() - TFill;
@@ -1956,15 +2052,15 @@ void compareXYZAgainstFourSortBT() {
 	  for (seed = 0; seed < seedLimit; seed++) { 
 	    // sawtooth(A, siz, m, tweak);
 	    // rand2(A, siz, m, tweak, seed);
-	    // plateau(A, siz, m, tweak);
-	    // shuffle(A, siz, m, tweak, seed);
+	    // plateau(A, siz, m, tweak);  // not used
+	    // shuffle(A, siz, m, tweak, seed); // not used
 	    // stagger(A, siz, m, tweak);
 	    slopes(A, siz, m, tweak);
 
 	    // Alternative algorithms to compare against FourSort::
 	    // callLQ(A, siz, compareIntVal2);
-	    // callBentley(A, siz, compareIntVal2);
-	    callChensort(A, siz, compareIntVal2);
+	    callBentley(A, siz, compareIntVal2);
+	    // callChensort(A, siz, compareIntVal2);
             // callMyQS(A, siz, compareIntVal);  
 	  }
 	  sortcBTime = sortcBTime + clock() - T - TFill;
@@ -1974,8 +2070,8 @@ void compareXYZAgainstFourSortBT() {
 	  for (seed = 0; seed < seedLimit; seed++) { 
 	    // sawtooth(B, siz, m, tweak);
 	    // rand2(B, siz, m, tweak, seed);
-	    // plateau(B, siz, m, tweak);
-	    // shuffle(B, siz, m, tweak, seed);
+	    // plateau(B, siz, m, tweak);  // not used
+	    // shuffle(B, siz, m, tweak, seed);  // not used
 	    // stagger(B, siz, m, tweak);
 	    slopes(B, siz, m, tweak);
 
@@ -2089,4 +2185,84 @@ void dflgmc(void **A, int N, int M, int depthLimit, int (*compareXY)()) {
 
 } // end dflgmc
  
+// Terrible implementation of introsort!!!!
+void introsort_r();
+void insertion();
+
+  // int a[], int n){
+void introsort(void **A, int N, int M, int (*compare)()) {
+  // introsort_r ( a, 0, n-1, (int(2*log(double(n)))));
+  int L = M-N;
+  int dp = 2.5 * floor(log(L));
+  introsort_r(A, N, M, dp, compare);
+  // _insertion(a, n);
+  insertion(A, N, M, compare);
+} // end introsort
+
+int med();
+
+int partition();
+void introsort_r(void **A, int first, int last, int depth, int (*compare)()) {
+  while (last - first > 16 ) {
+    // printf("introsort_r first %i last %i depth %i\n", first, last, depth);
+    if (depth <=0 ) {
+      // _heapsort(&a[first], first, last-first+1 );
+      printf("HEAPSORT %i last %i depth %i\n", first, last, depth);
+      heapc(A, first, last, compare);
+      return;
+    }
+    else {
+      depth--;
+      int pivot; 
+      int middle = 1 + first + (last - first)/2;
+      int m = med(A, first, middle, last, compare);
+      pivot = partition(A, first, last, m, compare);
+      introsort_r(A, pivot, last, depth, compare);
+      last = pivot;
+    }
+  }
+} // end introsort_r
+
+int partition ( void **A, int first, int last, int m, int (*compare)() ) {
+  // printf("partition first %i last %i m %i\n", first, last, m);
+  int i= first; int j=last;  
+  void **pi = A[m];
+        while (1)  
+        {  
+	  // while (a[i].smaller(x)) i++;  
+	  while ( compare(A[i], pi) < 0 ) i++;
+	  /*
+	    The "j--;" causes the last element of the segment to be miss allocated
+	    in the partition.
+	    Omitting "j--;" causes recursive calls on the same segment with constant 
+	    data.  This triggers the invocation of heapsort on that segment
+	   */
+	  // j--; 
+	  // while (x.smaller(a[j])) j=j-1;  
+	  while ( compare(pi, A[j]) < 0 ) j--; 
+	  if(!(i < j)) return i;  
+	  // exchange(i,j);  
+	  void **t = A[i]; A[i] = A[j]; A[j] = t;
+	  i++;  
+        }  
+} // end partition
+
+
+// void insertion ( int a[], int n ) {
+void insertion ( void **A, int N, int M, int (*compare)()) {
+  // printf("insertion N %i M %i\n", N, M);
+  int i;
+  //for ( i = 1; i < n; i++ ) {
+  for ( i = N+1; i <= M; i++ ) {
+    // int j, save = A[i];
+    int j; void *save = A[i];
+    // for ( j = i; j >= 1 && a[j - 1] > save; j-- )
+    for ( j = i; j >= 1+N && compare(A[j-1], save) > 0; j-- )
+      // a[j] = a[j - 1];
+      A[j] = A[j - 1];
+    // a[j] = save;
+    A[j] = save;
+  }
+} // end insertion
+
 

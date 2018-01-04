@@ -58,11 +58,14 @@ OTHER DEALINGS WITH THE SOFTWARE OR DOCUMENTATION.
 #include <pthread.h>
 #include <math.h>
 
+
 #define errexit(code,str)                          \
   fprintf(stderr,"%s: %s\n",(str),strerror(code)); \
   exit(1);
 
-const int cut2PLimit = 127;
+
+// const int cut2PLimit = 127;
+const int cut2PLimit = 2000;
 
 char* expiration = "*** License for foursort has expired ...\n";
 
@@ -76,125 +79,17 @@ int NUMTHREADS;
 /*
 #include "Isort.c"
 #include "Hsort.c"
-*/
 #include "Qusort.c"
 #include "Dsort.c"
+*/
 #include "Qstack.c"
-
-void cut2Pc();
-// cut2P is a support function to call up the workhorse cut2Pc
-void cut2P(void **A, int N, int M, int (*compareXY)()) { 
-  // printf("cut2P %d %d \n", N, M);
-  int L = M - N;
-  if ( L < cut2PLimit ) { 
-    quicksort0(A, N, M, compareXY);
-    return;
-  }
-  int depthLimit = 2.5 * floor(log(L));
-  cut2Pc(A, N, M, depthLimit, compareXY);
-} // end cut2P
+#include "C2fsort.c" // cut2f member
 
 struct stack *ll;
 struct task * newTask();
 void addTaskSynchronized();
 
-void cut2Pc(void **A, int N, int M, int depthLimit, int (*compareXY)()) {
-  int L;
-  Start:
-  if ( depthLimit <= 0 ) {
-    heapc(A, N, M, compareXY);
-    return;
-  }
-  L = M - N;
-  if ( L < cut2PLimit ) { 
-    quicksort0c(A, N, M, depthLimit, compareXY);
-    return;
-  }
-
-  depthLimit--;
-
-  // Check for duplicates
-        int sixth = (L + 1) / 6;
-        int e1 = N  + sixth;
-        int e5 = M - sixth;
-	int e3 = N + L/2; // The midpoint
-        // int e3 = (N+M) / 2; // The midpoint
-        int e4 = e3 + sixth;
-        int e2 = e3 - sixth;
-
-        // Sort these elements using a 5-element sorting network ...
-        void *ae1 = A[e1], *ae2 = A[e2], *ae3 = A[e3], *ae4 = A[e4], *ae5 = A[e5];
-	void *t;
-        // if (ae1 > ae2) { t = ae1; ae1 = ae2; ae2 = t; }
-	if ( 0 < compareXY(ae1, ae2) ) { t = ae1; ae1 = ae2; ae2 = t; } // 1-2
-	if ( 0 < compareXY(ae4, ae5) ) { t = ae4; ae4 = ae5; ae5 = t; } // 4-5
-	if ( 0 < compareXY(ae1, ae3) ) { t = ae1; ae1 = ae3; ae3 = t; } // 1-3
-	if ( 0 < compareXY(ae2, ae3) ) { t = ae2; ae2 = ae3; ae3 = t; } // 2-3
-	if ( 0 < compareXY(ae1, ae4) ) { t = ae1; ae1 = ae4; ae4 = t; } // 1-4
-	if ( 0 < compareXY(ae3, ae4) ) { t = ae3; ae3 = ae4; ae4 = t; } // 3-4
-	if ( 0 < compareXY(ae2, ae5) ) { t = ae2; ae2 = ae5; ae5 = t; } // 2-5
-	if ( 0 < compareXY(ae2, ae3) ) { t = ae2; ae2 = ae3; ae3 = t; } // 2-3
-	if ( 0 < compareXY(ae4, ae5) ) { t = ae4; ae4 = ae5; ae5 = t; } // 4-5
-	// ... and reassign
-	A[e1] = ae1; A[e2] = ae2; A[e3] = ae3; A[e4] = ae4; A[e5] = ae5;
-
-	// Fix end points
-	if ( compareXY(ae1, A[N]) < 0 ) iswap(N, e1, A);
-	if ( compareXY(A[M], ae5) < 0 ) iswap(M, e5, A);
-
-	register void *T = ae3; // pivot
-
-	// check Left label invariant
-	// if ( T <= A[N] || A[M] < T ) {
-	if ( compareXY(T, A[N]) <= 0 || compareXY(A[M], T) < 0) {
-	   // give up because cannot find a good pivot
-	   // dflgm is a dutch flag type of algorithm
-	   void cut2Pc();
-	   dflgm(A, N, M, e3, cut2Pc, depthLimit, compareXY);
-	   return;
-	 }
-
-	register int I, J; // indices
-	register void *AI, *AJ; // array values
-
-
-	// initialize running indices
-	I= N;
-	J= M;
-
-	// The left segment has elements < T
-	// The right segment has elements >= T
-  Left:
-	// I = I + 1;
-	// AI = A[I];
-	// if (AI < T) goto Left;
-	// if ( compareXY(AI,  T) < 0 ) goto Left;
-	while ( compareXY(A[++I],  T) < 0 ); AI = A[I];
-  Right:
-	// J = J - 1;
-	// AJ = A[J];
-	// if ( T <= AJ ) goto Right;
-	// if ( compareXY(T, AJ) <= 0 ) goto Right;
-	while ( compareXY(T, A[--J]) <= 0 ); AJ = A[J];
-	if ( I < J ) {
-	  A[I] = AJ; A[J] = AI;
-	  goto Left;
-	}
-	// Tail iteration  
-  	 if ( (I - N) < (M - J) ) { // smallest one first
-	   // cut2Pc(N, J, depthLimit);
-	   // N = I; 
-	   addTaskSynchronized(ll, newTask(A, I, M, depthLimit, compareXY));
-	   M = J;
-	   goto Start;
-	 }
-	 // cut2Pc(I, M, depthLimit);
-	 // M = J;
-	 addTaskSynchronized(ll, newTask(A, N, J, depthLimit, compareXY));
-	 N = I;
-	 goto Start;
-} // (*  OF cut2P; *) ... the brackets reminds that this was Pascal code
-
+#include "C2fpsort.c" // cut2f member
 
 void *myMallocSS(char* location, int size) {
   void *p = malloc(size);
@@ -251,7 +146,7 @@ void *sortThread(void *AAA) { // AAA is not used
     int (*compare)() = getXY(t);
     free(t);
     // taskCnt++;
-    cut2Pc(A, n, m, depthLimit, compare);
+    cut2fpc(A, n, m, depthLimit, compare);
   }
 
   //  printf("Exit of Thread number: %ld taskCnt: %d\n", pthread_self(), taskCnt);
@@ -369,7 +264,8 @@ void foursort(void **A, int size,
   // A = AA;
   // compareXY = compar;
   if ( size <= cut2S2Limit || numberOfThreads <= 1) {
-    quicksort0(A, 0, size-1, compareXY);
+    // quicksort0(A, 0, size-1, compareXY);
+    cut2f(A, 0, size-1, compareXY);
     return;
   }
   sleepingThreads = 0;

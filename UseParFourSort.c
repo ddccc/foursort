@@ -68,11 +68,6 @@ OTHER DEALINGS WITH THE SOFTWARE OR DOCUMENTATION.
 #include <sys/time.h>
 #include <math.h>
 
-#define errexit(code,str)                          \
-  fprintf(stderr,"%s: %s\n",(str),strerror(code)); \
-  exit(1);
-
-
 int NUMTHREADS = 2; // # threads used by parallel foursort
 
 // Example of objects that can be used to populate an array to be sorted:
@@ -83,7 +78,7 @@ int NUMTHREADS = 2; // # threads used by parallel foursort
     float valf;
   };
 
-// Here an exmple comparison function for these objects:
+// Here an example comparison function for these objects:
 // **** NOTE, again **** 
 //      All the examples below use ::::
 //          the intval objects, and 
@@ -516,16 +511,17 @@ void quicksort0(void **A, int N, int M, int (*compare)());
 void quicksort0c(void **A, int N, int M, int depthLimit, int (*compare)());
 void iswap(int p, int q, void **A);
 void heapc(void **A, int N, int M, int (*compare)());
-void cut2();
-#include "C2sort.c"
+void cut2f();
+// #include "C2sort.c"
 
 
 // invoking 3-layered quicksort
+void cut2f();
 void callCut2(void **A, int siz, 
 	  int (*compar ) (const void *, const void * ) ) {
   // A = AA;
   // compareXY = compar;
-  cut2(A, 0, siz-1, compar);
+  cut2f(A, 0, siz-1, compar);
 } // end callCut2
 
 // Here infrastructure for the Bentley test-bench
