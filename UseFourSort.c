@@ -87,12 +87,14 @@ void callLQ(void **A, int size, int (*compar ) () );
 void callBentley(void **A, int size, int (*compar ) () );
 void callChensort(void **A, int size, int (*compar ) () ); 
 void callMyQS(void **A, int size, int (*compar ) () ); 
+void callBlockSort(void **A, int size, int (*compar ) () ); 
 void testQsort();
 void testQuicksort0();
 void testIntroSort();
 void testDFLGM();
 void testFourSort();
 void testBentley();
+void testBlockSort();
 void validateQsort();
 void validateHeapSort();
 void validateFourSort();
@@ -102,6 +104,7 @@ void validateChensort();
 void validateFourSortBT();
 void validateDFLGM();
 void validateIntroSort();
+void validateBlockSort();
 void timeTest();
 void compareQsortAgainstQuicksort0();
 void compareQsortAgainstFourSort();
@@ -126,6 +129,7 @@ void myqs();
 void iswap();
 void dflgm();
 void introsort();
+void blockSort();
 
 // Example of objects that can be used to populate an array to be sorted:
   // To obtain the int field from X: ((struct intval *) X)->val
@@ -174,6 +178,7 @@ int main (int argc, char *argv[]) {
      // testBentley();
   // void introsort(void **A, int N, int M, int (*compare)())
   // testIntroSort();
+  // testBlockSort();
   // validateHeapSort();
   // validateFourSort();
   // validateMyQS();
@@ -182,8 +187,9 @@ int main (int argc, char *argv[]) {
   // validateChensort();
   // validateDFLGM();
   // validateIntroSort();
+  // validateBlockSort(); 
   // Measure the sorting time of an algorithm
-  // timeTest();
+  timeTest();
   // Compare the outputs of two sorting algorithms
      // validateXYZ(); // must provide an other algorithm XYZ
      // ... and uncomment validateXYZ ...
@@ -197,7 +203,7 @@ int main (int argc, char *argv[]) {
      // compareQsortAgainstFourSort();
      // compareLQAgainstFourSort(); // LQ is qsort in the Linux C-library
      // compareBentleyAgainstFourSort();
-     compareBentleyAgainstQuicksort0();
+     // compareBentleyAgainstQuicksort0();
      // compareChenSortAgainstFourSort();
      // compareDFLGMAgainstQuicksort0();
      // compareDFLGMAgainstFourSort();
@@ -358,9 +364,16 @@ void testBentley() {
 
 void testIntroSort() {
   void callIntroSort();
-  testAlgorithm0("Check introSort()", 1024*1025*16, callIntroSort); // problem
+  testAlgorithm0("Check introSort()", 1024*1025*16, callIntroSort);
   // testAlgorithm0("Check introSort()", 1024*128, callIntroSort);
 } // end testIntroSort()
+
+void testBlockSort() {
+  void callBlockSort();
+  testAlgorithm0("Check blockSort()", 1024*1024*16, callBlockSort);
+  // testAlgorithm0("Check blockSort()", 1024*1024, callBlockSort); // OK
+} // end testIntroSort()
+
 
 // validateAlgorithm0 is used to check algorithm alg2 against a
 // trusted algorithm alg1.
@@ -466,6 +479,12 @@ void validateIntroSort() {
 		    callQuicksort0, callIntroSort);
 }
 
+void validateBlockSort() {
+  void callQuicksort0(), callBloackSort();
+  validateAlgorithm("Running validate blockSort...",
+		    callQuicksort0, callBlockSort);
+}
+
 // Note:
 //      alg1 is using the comparison function compareIntVal
 //      alg2 is using the comparison function compareIntVal2
@@ -535,7 +554,7 @@ void validateChensort() {
 
 // Run an algorithm and report the time used
 void timeTest() {
-  printf("timeTest() of foursort \n");
+  printf("timeTest() of XYZ \n");
   int algTime, T;
   int seed;
   // int seedLimit = 10;
@@ -573,13 +592,14 @@ void timeTest() {
       // for ( k = 0; k < siz; k++ ) A[k] = 0;
       // for ( k = 0; k < siz; k++ ) A[k] = k%5;
       // for ( k = 0; k < siz; k++ ) A[k] = siz-k;
-      foursort(A, siz, compareIntVal);  
+      // foursort(A, siz, compareIntVal);  
       // callLQ(A, siz, compareIntVal2);
-      // callBentley(A, siz, compareIntVal2);
+      callBentley(A, siz, compareIntVal2);
       // callChensort(A, siz, compareIntVal2);
       // callMyQS(A, siz, compareIntVal);  
       // callQuicksort0(A, siz, compareIntVal);
       // callDflgm2(A, siz, compareIntVal);
+      // callBlockSort(A, siz, compareIntVal);
     }
     // ... and subtract the fill time to obtain the sort time
     algTime = (clock() - T - TFill)/seedLimit;
@@ -1056,8 +1076,8 @@ void callBentley(void **A, int size, int (*compar ) () ) {
 #define inline
 #endif
 
-static inline char	*med33 _PARAMS((char *, char *, char *, int (*)()));
-static inline void	 swapfunc _PARAMS((char *, char *, int, int));
+// static inline char	*med33 _PARAMS((char *, char *, char *, int (*)()));
+// static inline void	 swapfunc _PARAMS((char *, char *, int, int));
 
 #define min(a, b)	(a) < (b) ? a : b
 
@@ -2247,7 +2267,6 @@ int partition ( void **A, int first, int last, int m, int (*compare)() ) {
         }  
 } // end partition
 
-
 // void insertion ( int a[], int n ) {
 void insertion ( void **A, int N, int M, int (*compare)()) {
   // printf("insertion N %i M %i\n", N, M);
@@ -2266,3 +2285,247 @@ void insertion ( void **A, int N, int M, int (*compare)()) {
 } // end insertion
 
 
+/*
+From:
+    https://arxiv.org/pdf/1604.06697.pdf
+    BlockQuicksort: How Branch Mispredictions don't affect Quicksort
+    Stefan Edelkamp and Armin Weiss2
+Original c++ code ported to C
+*/
+
+void callBlockSort(void **A, int size, 
+	int (*compar ) (const void *, const void * ) ) {
+  blockSort(A, 0, size-1, compar);
+} // end callBlockSort
+
+void blockSortc();
+const int BLOCKSIZE = 128;
+void blockSort(void **A, int N, int M, int (*compar )) {
+  int L = M-N;
+  if (L <= 0) return;
+  int dp = 2.5 * floor(log(L));
+  int indexL[BLOCKSIZE], indexR[BLOCKSIZE];
+  blockSortc(A, N, M, indexL, indexR, dp, compar);
+}
+
+void blockSortc(void **A, int N, int M, int indexL[], int indexR[],
+	   int depthLimit, int (*compareXY)()) {
+  int L;
+ again:
+  // printf("blockSortc N %i M %i d %i \n", N, M, depthLimit);
+  L = M - N;
+  // if ( L <= 0 ) return;
+  if ( L <= 10 ) { 
+    insertionsort(A, N, M, compareXY);
+    return;
+  }
+
+  if ( depthLimit <= 0 ) {
+    heapc(A, N, M, compareXY);
+    return;
+  }
+  depthLimit--;
+
+    // 10 < L
+    // grab median of 3 or 9 to get a good pivot
+    int pm = N + L/2; // (N+M)/2;
+    int pl = N;
+    int pn = M;
+    if (L > 40) { // do median of 9
+      int d = L/8;
+      pl = med(A, pl, pl + d, pl + 2 * d, compareXY);
+      pm = med(A, pm - d, pm, pm + d, compareXY);
+      pn = med(A, pn - 2 * d, pn - d, pn, compareXY);
+    }
+    pm = med(A, pl, pm, pn, compareXY); // pm is index to 'best' pivot ...
+
+    // iter last = end - 1 ;
+    int last = M, begin = N;
+    // std::iter_swap (pivot_position, last);
+    iswap(pm, last, A);
+    // const typename std::iterator_traits <iter >::value_type & pivot = *last;
+    void *pivot = A[last];
+    int pivot_position = last;
+    last --;
+    
+    int num_left = 0;
+    int num_right = 0;
+    int start_left = 0;
+    int start_right = 0;
+    int num;
+    int j; // for the for-loops 
+
+    // main loop
+    while (last - begin + 1 > 2 * BLOCKSIZE)
+      { 
+	// printf("BB blockSortc begin %i last %i pi %i\n", 
+	//	 begin, last, pivot_position);
+
+       //Compare and store in buffers
+          if ( num_left == 0 ) {
+              start_left = 0;
+              for (j = 0; j < BLOCKSIZE; j++) {
+                  indexL[num_left] = j;
+                  // num_left += ( !( less( begin[j], pivot ) ) );
+		  // num_left += ( !( less( A[begin+j], pivot ) ) );
+		  // num_left += ( !( compareXY(A[begin+j], pivot) < 0 ) );
+		  num_left += ( compareXY(A[begin+j], pivot) >= 0 );
+              }
+          }
+          if ( num_right == 0 ) {
+            start_right = 0;
+            for (j = 0; j < BLOCKSIZE; j++) {
+                indexR [ num_right ] = j;
+                // num_right += ! ( less( pivot , *( last - j ) ) );
+                // num_right += ! ( less( pivot , A[last-j] ) );
+		// num_right += ! ( compareXY(pivot, A[last-j]) < 0 );
+		num_right += ( compareXY(pivot, A[last-j]) >= 0 );
+	    }
+	  }
+	  // rearrange elements
+	  // num = std::min ( num_left , num_right );
+	  int num = ( num_left <= num_right ? num_left : num_right );
+	  for (j = 0; j < num; j++)
+	    // std::iter_swap ( begin + indexL[start_left + j], 
+	    //	                last - indexR[start_right + j] );
+	    iswap(begin + indexL[start_left + j], 
+		  last - indexR[start_right + j], A);
+  
+        num_left -= num;
+        num_right -= num;
+        start_left += num;
+        start_right += num;
+        begin += ( num_left == 0 ) ? BLOCKSIZE : 0;
+        last -= ( num_right == 0 ) ? BLOCKSIZE : 0;
+  
+        } // end main l o o p
+  
+	// printf("AA blockSortc N %i M %i\n", N, M);
+
+        // printf("CC blockSortc begin %i last %i pi %i\n", 
+        //        begin, last, pivot_position);
+
+
+        // Compare and store in buffers final iteration
+        int shiftR = 0, shiftL = 0;
+        if ( num_right == 0 && num_left == 0 ) { 
+            // for small arrays or in the unlikely
+            // case that both buffers are empty
+            shiftL = ((last - begin) + 1 ) / 2 ;
+            shiftR = (last - begin) + 1 - shiftL;
+            start_left = 0; start_right = 0;
+            for (j = 0; j < shiftL; j++) {
+                indexL[ num_left ] = j;
+                // num_left += ( ! less( begin[j], pivot ) );
+		num_left += ( compareXY(A[begin+j], pivot) >= 0 );
+                indexR [ num_right ] = j;
+                // num_right += ! less( pivot, *( last - j ) );
+		num_right += ( compareXY(pivot, A[last-j]) >= 0 );
+            }
+            if ( shiftL < shiftR )
+            {
+                indexR [ num_right ] = shiftR - 1;
+                // num_right += ! less( pivot, *( last - shiftR + 1 ) );
+		num_right += ( compareXY(pivot, A[last - shiftR + 1]) >= 0 );
+            }
+         }
+         else if ( num_right != 0 ) {
+             shiftL = ( last - begin ) - BLOCKSIZE + 1;
+             shiftR = BLOCKSIZE;
+              start_left = 0;
+              for (j = 0; j < shiftL; j++) {
+                  indexL [ num_left ] = j;
+                  // num_left += ( ! less( begin[ j ] , pivot ) );
+		  num_left += ( compareXY(A[begin+j], pivot) >= 0 );
+              }
+         }
+         else {
+             shiftL = BLOCKSIZE;
+             shiftR = ( last - begin) - BLOCKSIZE + 1;
+             start_right = 0;
+             for (j = 0; j < shiftR; j++) {
+                indexR [ num_right ] = j;
+                // num_right += ! ( less( pivot , *( last - j ) ) );
+		num_right += ( compareXY(pivot, A[last - j]) >= 0 );
+             }
+         }
+   
+         // rearrange final iteration
+         // num = std::min ( num_left , num_right );
+	 num = ( num_left <= num_right ? num_left : num_right);
+         for (j = 0; j < num; j++)
+	   // std::iter_swap ( begin + indexL [ start_left + j ], 
+	   //                  last - indexR [ start_right + j ] );
+	   iswap(begin + indexL [ start_left + j ],
+		 last - indexR [ start_right + j ], A);
+   
+         num_left -= num;
+         num_right -= num;
+         start_left += num;
+         start_right += num;
+         begin += ( num_left == 0 ) ? shiftL : 0;
+         last -= ( num_right == 0 ) ? shiftR : 0;
+         // end final iteration
+   
+	 int pivotIndex;
+        // rearrange elements remaining in buffer
+        if ( num_left != 0 )
+        {
+            int lowerI = start_left + num_left - 1;
+            int upper = last - begin;
+            // search first element to be swapped
+            while ( lowerI >= start_left && indexL [ lowerI ] == upper ) {
+               upper--; lowerI--;
+            }
+            while ( lowerI >= start_left )
+	      // std::iter_swap ( begin + upper--, begin + indexL [ lowerI--]);
+	      iswap(begin + upper--, begin + indexL [ lowerI--], A);
+   
+            // std::iter_swap ( pivot_position, begin + upper + 1 ); 
+	    iswap(pivot_position, begin + upper + 1, A);
+	    // fetch the pivot
+            // return begin + upper + 1;
+	    pivotIndex = begin + upper + 1;
+        }
+        else if ( num_right != 0 ) {
+	  int lowerI = start_right + num_right - 1 ;
+	  int upper = last - begin;
+	  // search first element to be swapped
+	  while( lowerI >= start_right && indexR[ lowerI ] == upper ) {
+	    upper--; lowerI--;
+	  }
+   
+	  while (lowerI >= start_right )
+	    // std::iter_swap(last - upper--, last - indexR[lowerI--]);
+	    iswap(last - upper--, last - indexR[lowerI--], A);
+   
+	  // std::iter_swap (pivot_position, last - upper ); 
+	  iswap(pivot_position, last - upper, A);
+	  // fetch the pivot
+	  // return last - upper;
+	  pivotIndex = last - upper;
+	}
+        else { // no remaining elements
+	  // std::iter_swap(pivot_position, begin); // fetch the pivot
+	  iswap(pivot_position, begin, A);
+	  // return begin;
+	  pivotIndex = begin;
+        }
+
+	// Recurse on smallest segment first.
+	depthLimit++;
+
+	// printf("DD blockSortc begin %i last %i pi %i\n", 
+	//        begin, last, pivotIndex);
+
+	if ( pivotIndex - begin < last - pivotIndex ) {
+	  blockSortc(A, N, pivotIndex-1, indexL, indexR, depthLimit, compareXY);
+	  N = pivotIndex + 1;
+	  goto again;
+	}
+	blockSortc(A, pivotIndex+1, M, indexL, indexR, depthLimit, compareXY);
+	M = pivotIndex-1;
+	goto again;
+
+} // end blockSortc
+   
