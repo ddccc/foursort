@@ -189,7 +189,7 @@ int main (int argc, char *argv[]) {
   // validateIntroSort();
   // validateBlockSort(); 
   // Measure the sorting time of an algorithm
-  timeTest();
+  // timeTest();
   // Compare the outputs of two sorting algorithms
      // validateXYZ(); // must provide an other algorithm XYZ
      // ... and uncomment validateXYZ ...
@@ -198,7 +198,7 @@ int main (int argc, char *argv[]) {
      // ... and uncomment also compareFoursortAgainstXYZ ...
   // Whatever here:::
      // compareQuicksort0AgainstFourSort();
-     // compareMyQSAgainstFourSort();
+     compareMyQSAgainstFourSort();
      // compareQsortAgainstQuicksort0(); 
      // compareQsortAgainstFourSort();
      // compareLQAgainstFourSort(); // LQ is qsort in the Linux C-library
@@ -625,7 +625,7 @@ void compareAlgorithms00(char *label, int siz, int seedLimit,
   int z;
   int limit = 1024 * 1024 * 16 + 1;
   while (siz <= limit) {
-    printf("%s %d %s %d %s", "siz: ", siz, " seedLimit: ", seedLimit, "\n");
+    printf("siz: %d seedLimit: %d\n", siz, seedLimit);
     struct intval *pi;
     void **A = myMalloc("compareAlgorithms0 1", sizeof(pi) * siz);
     // construct array
@@ -637,7 +637,9 @@ void compareAlgorithms00(char *label, int siz, int seedLimit,
     // warm up the process
     for (seed = 0; seed < seedLimit; seed++) 
       fillarray(A, siz, seed);
-    for (z = 0; z < 3; z++) { // repeat to check stability
+    int repeats = 3;
+    int totalAlg1 = 0; int totalAlg2 = 0;
+    for (z = 0; z < repeats; z++) { // repeat to check stability
       alg1Time = 0; alg2Time = 0;
       int TFill = clock();
       for (seed = 0; seed < seedLimit; seed++) 
@@ -649,19 +651,24 @@ void compareAlgorithms00(char *label, int siz, int seedLimit,
 	(*alg1)(A, siz, compare1); 
       }
       alg1Time = clock() - T - TFill;
+      totalAlg1 += alg1Time;
       T = clock();
       for (seed = 0; seed < seedLimit; seed++) { 
 	fillarray(A, siz, seed);
 	(*alg2)(A, siz, compare2);
       }
       alg2Time = clock() - T - TFill;
-      printf("%s %d %s", "siz: ", siz, " ");
-      printf("%s %d %s", "alg1Time: ", alg1Time, " ");
-      printf("%s %d %s", "alg2Time: ", alg2Time, " ");
-      float frac = 0;
-      if ( alg1Time != 0 ) frac = alg2Time / ( 1.0 * alg1Time );
-      printf("%s %f %s", "frac: ", frac, "\n");
+      totalAlg2 += alg2Time;
     }
+    totalAlg1 = totalAlg1/repeats;
+    totalAlg2 = totalAlg2/repeats;
+    printf("siz: %d ", siz);
+    printf("totalAlg1: %d ", totalAlg1);
+    printf("totalAlg2: %d ", totalAlg2);
+    float frac = 0;
+    if ( totalAlg1 != 0 ) frac = totalAlg2 / ( 1.0 *  totalAlg1 );
+    printf("frac: %f\n", frac);
+
     // free array
     for (i = 0; i < siz; i++) {
       free(A[i]);
@@ -672,7 +679,7 @@ void compareAlgorithms00(char *label, int siz, int seedLimit,
     // siz = siz * 2;
     // seedLimit = seedLimit / 2;
 
-  }
+  } // and repeat
 } // end compareAlgorithms00
 
 void compareAlgorithms0(char *label, int siz, int seedLimit, 
