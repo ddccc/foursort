@@ -1,4 +1,4 @@
-// c:/bsd/rigel/sort/C2sort
+// c:/bsd/rigel/sort/C2fpsort
 // Date: Fri Jan 31 13:32:12 2014, 2017
 // (C) OntoOO/ Dennis de Champeaux
 

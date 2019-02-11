@@ -126,7 +126,7 @@ void insertionsort();
 void heapc();
 void quicksort0c();
 void myqs();
-void iswap();
+// void iswap();
 void dflgm();
 void introsort();
 void blockSort();
@@ -189,7 +189,7 @@ int main (int argc, char *argv[]) {
   // validateIntroSort();
   // validateBlockSort(); 
   // Measure the sorting time of an algorithm
-  // timeTest();
+  timeTest();
   // Compare the outputs of two sorting algorithms
      // validateXYZ(); // must provide an other algorithm XYZ
      // ... and uncomment validateXYZ ...
@@ -198,7 +198,7 @@ int main (int argc, char *argv[]) {
      // ... and uncomment also compareFoursortAgainstXYZ ...
   // Whatever here:::
      // compareQuicksort0AgainstFourSort();
-     compareMyQSAgainstFourSort();
+     // compareMyQSAgainstFourSort();
      // compareQsortAgainstQuicksort0(); 
      // compareQsortAgainstFourSort();
      // compareLQAgainstFourSort(); // LQ is qsort in the Linux C-library
@@ -625,7 +625,7 @@ void compareAlgorithms00(char *label, int siz, int seedLimit,
   int z;
   int limit = 1024 * 1024 * 16 + 1;
   while (siz <= limit) {
-    printf("siz: %d seedLimit: %d\n", siz, seedLimit);
+    printf("%s %d %s %d %s", "siz: ", siz, " seedLimit: ", seedLimit, "\n");
     struct intval *pi;
     void **A = myMalloc("compareAlgorithms0 1", sizeof(pi) * siz);
     // construct array
@@ -637,9 +637,7 @@ void compareAlgorithms00(char *label, int siz, int seedLimit,
     // warm up the process
     for (seed = 0; seed < seedLimit; seed++) 
       fillarray(A, siz, seed);
-    int repeats = 3;
-    int totalAlg1 = 0; int totalAlg2 = 0;
-    for (z = 0; z < repeats; z++) { // repeat to check stability
+    for (z = 0; z < 3; z++) { // repeat to check stability
       alg1Time = 0; alg2Time = 0;
       int TFill = clock();
       for (seed = 0; seed < seedLimit; seed++) 
@@ -651,24 +649,19 @@ void compareAlgorithms00(char *label, int siz, int seedLimit,
 	(*alg1)(A, siz, compare1); 
       }
       alg1Time = clock() - T - TFill;
-      totalAlg1 += alg1Time;
       T = clock();
       for (seed = 0; seed < seedLimit; seed++) { 
 	fillarray(A, siz, seed);
 	(*alg2)(A, siz, compare2);
       }
       alg2Time = clock() - T - TFill;
-      totalAlg2 += alg2Time;
+      printf("%s %d %s", "siz: ", siz, " ");
+      printf("%s %d %s", "alg1Time: ", alg1Time, " ");
+      printf("%s %d %s", "alg2Time: ", alg2Time, " ");
+      float frac = 0;
+      if ( alg1Time != 0 ) frac = alg2Time / ( 1.0 * alg1Time );
+      printf("%s %f %s", "frac: ", frac, "\n");
     }
-    totalAlg1 = totalAlg1/repeats;
-    totalAlg2 = totalAlg2/repeats;
-    printf("siz: %d ", siz);
-    printf("totalAlg1: %d ", totalAlg1);
-    printf("totalAlg2: %d ", totalAlg2);
-    float frac = 0;
-    if ( totalAlg1 != 0 ) frac = totalAlg2 / ( 1.0 *  totalAlg1 );
-    printf("frac: %f\n", frac);
-
     // free array
     for (i = 0; i < siz; i++) {
       free(A[i]);
@@ -679,7 +672,7 @@ void compareAlgorithms00(char *label, int siz, int seedLimit,
     // siz = siz * 2;
     // seedLimit = seedLimit / 2;
 
-  } // and repeat
+  }
 } // end compareAlgorithms00
 
 void compareAlgorithms0(char *label, int siz, int seedLimit, 
@@ -728,6 +721,8 @@ void compareMyQSAgainstFourSort() {
   compareAlgorithms("Compare myqs vs foursort", callMyQS, foursort);
   // compareAlgorithms("Compare myqs vs foursort", foursort, callMyQS);
 } // end compareMyQSAgainstFourSort
+
+#define iswap(p, q, A) { void *t3t = A[p]; A[p] = A[q]; A[q] = t3t; }
 
 void callMyQS(void **A, int size, 
 	int (*compar ) (const void *, const void * ) ) {
@@ -1875,7 +1870,7 @@ void swapfunc(char *a, char *b, int n, int swaptype)
   */
 
 
-#define p 16
+#define pxx 16
 #define beta1 256
 #define beta2 512
 // Symmetry Partition Sort
@@ -1907,7 +1902,7 @@ void SymPartitionSort(char *a, int s, int n, int es, int (*cmp)(const void *,con
                 left=right=1; pc-=es;
             }
             else{
-               v=m > n/beta1 ? n : p*m-1;
+               v=m > n/beta1 ? n : pxx*m-1;
                if(s < 0) {  //Move sorted items to left end
                       if(v<n) {left=m; s=-s;}
                       else    {left=(m+1)/2; right=m/2;} 
@@ -2305,6 +2300,12 @@ void callBlockSort(void **A, int size,
   blockSort(A, 0, size-1, compar);
 } // end callBlockSort
 
+void iswap3(int p, int q, void **A) {
+  void *t = A[p];
+  A[p] = A[q];
+  A[q] = t;
+} // end of iswap3
+
 void blockSortc();
 const int BLOCKSIZE = 128;
 void blockSort(void **A, int N, int M, int (*compar )) {
@@ -2395,7 +2396,7 @@ void blockSortc(void **A, int N, int M, int indexL[], int indexR[],
 	  for (j = 0; j < num; j++)
 	    // std::iter_swap ( begin + indexL[start_left + j], 
 	    //	                last - indexR[start_right + j] );
-	    iswap(begin + indexL[start_left + j], 
+	    iswap3(begin + indexL[start_left + j], 
 		  last - indexR[start_right + j], A);
   
         num_left -= num;
@@ -2463,7 +2464,7 @@ void blockSortc(void **A, int N, int M, int indexL[], int indexR[],
          for (j = 0; j < num; j++)
 	   // std::iter_swap ( begin + indexL [ start_left + j ], 
 	   //                  last - indexR [ start_right + j ] );
-	   iswap(begin + indexL [ start_left + j ],
+	   iswap3(begin + indexL [ start_left + j ],
 		 last - indexR [ start_right + j ], A);
    
          num_left -= num;
@@ -2486,10 +2487,10 @@ void blockSortc(void **A, int N, int M, int indexL[], int indexR[],
             }
             while ( lowerI >= start_left )
 	      // std::iter_swap ( begin + upper--, begin + indexL [ lowerI--]);
-	      iswap(begin + upper--, begin + indexL [ lowerI--], A);
+	      iswap3(begin + upper--, begin + indexL [ lowerI--], A);
    
             // std::iter_swap ( pivot_position, begin + upper + 1 ); 
-	    iswap(pivot_position, begin + upper + 1, A);
+	    iswap3(pivot_position, begin + upper + 1, A);
 	    // fetch the pivot
             // return begin + upper + 1;
 	    pivotIndex = begin + upper + 1;
@@ -2504,10 +2505,10 @@ void blockSortc(void **A, int N, int M, int indexL[], int indexR[],
    
 	  while (lowerI >= start_right )
 	    // std::iter_swap(last - upper--, last - indexR[lowerI--]);
-	    iswap(last - upper--, last - indexR[lowerI--], A);
+	    iswap3(last - upper--, last - indexR[lowerI--], A);
    
 	  // std::iter_swap (pivot_position, last - upper ); 
-	  iswap(pivot_position, last - upper, A);
+	  iswap3(pivot_position, last - upper, A);
 	  // fetch the pivot
 	  // return last - upper;
 	  pivotIndex = last - upper;
