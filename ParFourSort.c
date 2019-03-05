@@ -65,7 +65,7 @@ OTHER DEALINGS WITH THE SOFTWARE OR DOCUMENTATION.
 
 
 // const int cut2PLimit = 127;
-const int cut2PLimit = 2000;
+// const int cut2PLimit = 2000;
 
 char* expiration = "*** License for foursort has expired ...\n";
 
@@ -82,14 +82,15 @@ int NUMTHREADS;
 #include "Qusort.c"
 #include "Dsort.c"
 */
+#include "Qusort.c"
 #include "Qstack.c"
-#include "C2fsort.c" // cut2f member
+#include "C2sort.c" // cut2 member
 
 struct stack *ll;
 struct task * newTask();
 void addTaskSynchronized();
 
-#include "C2fpsort.c" // cut2f member
+#include "C2psort.c" // cut2p member
 
 void *myMallocSS(char* location, int size) {
   void *p = malloc(size);
@@ -146,7 +147,7 @@ void *sortThread(void *AAA) { // AAA is not used
     int (*compare)() = getXY(t);
     free(t);
     // taskCnt++;
-    cut2fpc(A, n, m, depthLimit, compare);
+    cut2pc(A, n, m, depthLimit, compare);
   }
 
   //  printf("Exit of Thread number: %ld taskCnt: %d\n", pthread_self(), taskCnt);
@@ -265,7 +266,7 @@ void foursort(void **A, int size,
   // compareXY = compar;
   if ( size <= cut2S2Limit || numberOfThreads <= 1) {
     // quicksort0(A, 0, size-1, compareXY);
-    cut2f(A, 0, size-1, compareXY);
+    cut2(A, 0, size-1, compareXY);
     return;
   }
   sleepingThreads = 0;

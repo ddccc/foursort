@@ -511,17 +511,17 @@ void quicksort0(void **A, int N, int M, int (*compare)());
 void quicksort0c(void **A, int N, int M, int depthLimit, int (*compare)());
 void iswap(int p, int q, void **A);
 void heapc(void **A, int N, int M, int (*compare)());
-void cut2f();
+void cut2();
 // #include "C2sort.c"
 
 
 // invoking 3-layered quicksort
-void cut2f();
+// void cut2f();
 void callCut2(void **A, int siz, 
 	  int (*compar ) (const void *, const void * ) ) {
   // A = AA;
   // compareXY = compar;
-  cut2f(A, 0, siz-1, compar);
+  cut2(A, 0, siz-1, compar);
 } // end callCut2
 
 // Here infrastructure for the Bentley test-bench

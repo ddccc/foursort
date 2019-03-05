@@ -1,4 +1,4 @@
-/*
+/* 
 File: c:/bsd/rigel/sort/Licence.txt
 Date: Sat Jun 09 22:22:31 2012
 
@@ -839,10 +839,10 @@ void myqsc(void **A, int N, int M,
 } // end myqsc
 
 
-void cut2f(void **A, int N, int M, int (*compareXY)());
+void cut2(void **A, int N, int M, int (*compareXY)());
 void callCut2(void **A, int size, 
 	int (*compar ) (const void *, const void * ) ) {
-  cut2f(A, 0, size-1, compar);
+  cut2(A, 0, size-1, compar);
 } // end callCut2
 
 void dflgm2(void **A, int N, int M, int (*compar )());

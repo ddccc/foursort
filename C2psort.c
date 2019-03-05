@@ -1,27 +1,27 @@
-// c:/bsd/rigel/sort/C2sort.c
+// c:/bsd/rigel/sort/C2psort.c
 // Date: Fri Jan 31 13:32:12 2014, 2017 Sun Mar 03 16:14:28 2019
 // (C) OntoOO/ Dennis de Champeaux
 
-const int cut2Limit =  900; 
+const int cut2pLimit =  2000; 
 
-void cut2c();
+void cut2pc();
 // cut2 is used as a best in class quicksort implementation 
 // with a defense against quadratic behavior due to duplicates
 // cut2 is a support function to call up the workhorse cut2c
-void cut2(void **A, int N, int M, int (*compare)()) { 
+void cut2p(void **A, int N, int M, int (*compare)()) { 
   // printf("cut2 %d %d %d\n", N, M, M-N);
   int L = M - N;
-  if ( L < cut2Limit ) { 
+  if ( L < cut2pLimit ) { 
     quicksort0(A, N, M, compare);
     return;
   }
   int depthLimit = 2.5 * floor(log(L));
-  cut2c(A, N, M, depthLimit, compare);
+  cut2pc(A, N, M, depthLimit, compare);
 } // end cut2
 
 // Cut2c does 2-partitioning with one pivot.
 // Cut2c invokes dflgm when trouble is encountered.
-void cut2c(void **A, int N, int M, int depthLimit, int (*compareXY)()) {
+void cut2pc(void **A, int N, int M, int depthLimit, int (*compareXY)()) {
   int L;
  Start:
   if ( depthLimit <= 0 ) {
@@ -29,8 +29,8 @@ void cut2c(void **A, int N, int M, int depthLimit, int (*compareXY)()) {
     return;
   }
   L = M - N +1;
-  if ( L < cut2Limit ) { 
-    quicksort0c(A, N, M, depthLimit, compareXY);
+  if ( L < cut2pLimit ) { 
+    cut2c(A, N, M, depthLimit, compareXY);
     return;
   }
   depthLimit--;
@@ -85,12 +85,16 @@ void cut2c(void **A, int N, int M, int depthLimit, int (*compareXY)()) {
 	}
 	// Tail iteration
 	if ( (I - N) < (M - J) ) { // smallest one first
-	  cut2c(A, N, J, depthLimit, compareXY);
-	  N = I; 
+	  // cut2c(A, N, J, depthLimit, compareXY);
+	  // N = I; 
+	  addTaskSynchronized(ll, newTask(A, I, M, depthLimit, compareXY));
+	  M = J;
 	  goto Start;
 	}
-	cut2c(A, I, M, depthLimit, compareXY);
-	M = J;
+	// cut2c(A, I, M, depthLimit, compareXY);
+	// M = J;
+	addTaskSynchronized(ll, newTask(A, N, J, depthLimit, compareXY));
+	N = I;
 	goto Start;
 
 } // (*  OF cut2; *) the brackets remind that this was once, 1985, Pascal code
