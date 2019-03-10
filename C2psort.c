@@ -2,7 +2,7 @@
 // Date: Fri Jan 31 13:32:12 2014, 2017 Sun Mar 03 16:14:28 2019
 // (C) OntoOO/ Dennis de Champeaux
 
-const int cut2pLimit =  2000; 
+const int cut2pLimit =  1150; 
 
 void cut2pc();
 // cut2 is used as a best in class quicksort implementation 
@@ -87,7 +87,7 @@ void cut2pc(void **A, int N, int M, int depthLimit, int (*compareXY)()) {
     int k, N1, M1; // for sampling
     // int middlex = N + (L>>1); // N + L/2
 
-    int probeLng = sqrt(L);
+    int probeLng = sqrt(L/9);
     int halfSegmentLng = probeLng >> 1; // probeLng/2;
     int quartSegmentLng = probeLng >> 2; // probeLng/4;
     N1 = middlex - halfSegmentLng; //  N + (L>>1) - halfSegmentLng;
