@@ -15,7 +15,7 @@ void cut2p(void **A, int N, int M, int (*compare)()) {
     quicksort0(A, N, M, compare);
     return;
   }
-  int depthLimit = 2.5 * floor(log(L));
+  int depthLimit = 1 + 2.5 * floor(log(L));
   cut2pc(A, N, M, depthLimit, compare);
 } // end cut2
 
@@ -24,6 +24,8 @@ void cut2p(void **A, int N, int M, int (*compare)()) {
 void cut2pc(void **A, int N, int M, int depthLimit, int (*compareXY)()) {
   int L;
  Start:
+  L = M - N + 1;
+  if ( L <= 1 ) return;
   if ( depthLimit <= 0 ) {
     heapc(A, N, M, compareXY);
     return;
