@@ -76,12 +76,11 @@ int sleepingThreads = 0;
 int NUMTHREADS;
 
 // the members of ParFourSort
-/*
+// /*
 #include "Isort.c"
 #include "Hsort.c"
-#include "Qusort.c"
 #include "Dsort.c"
-*/
+// */
 #include "Qusort.c"
 #include "Qstack.c"
 #include "C2sort.c" // cut2 member

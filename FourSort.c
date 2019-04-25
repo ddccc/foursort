@@ -1,4 +1,4 @@
-/*  
+/*
 Copyright (c) 2012, Dennis de Champeaux.  All rights reserved.
 
 The copyright holders hereby grant to any person obtaining a copy of
@@ -66,12 +66,12 @@ char* expiration = "*** License for foursort has expired ...\n";
 // void **A;
 
 // the members of FourSort
-/*
+// /*
 #include "Isort.c"
 #include "Hsort.c"
-#include "Qusort.c" // quicksort member
 #include "Dsort.c"  // dflgm member
-*/
+// */
+
 #include "Qusort.c" // quicksort member
 #include "C2sort.c" // cut2 member
 

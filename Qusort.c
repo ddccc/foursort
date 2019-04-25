@@ -2,11 +2,11 @@
 // Date: Fri Jan 31 13:32:12 2014/ Tue May 19 15:02:00 2015, 2017
 // (C) OntoOO/ Dennis de Champeaux
 
-#include "Hsort.c"
-#include "Dsort.c"
-#include "Isort.c"
+// #include "Hsort.c"
+// #include "Dsort.c"
+// #include "Isort.c"
 
-static void quicksort0c(void **, int, int, int, int (*)(const void*, const void*));
+void quicksort0c(void **, int, int, int, int (*)(const void*, const void*));
 
 // calculate the median of 3
 int med(void **A, int a, int b, int c,
