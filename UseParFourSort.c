@@ -68,7 +68,7 @@ OTHER DEALINGS WITH THE SOFTWARE OR DOCUMENTATION.
 #include <sys/time.h>
 #include <math.h>
 
-int NUMTHREADS = 2; // # threads used by parallel foursort
+int NUMTHREADS = 4; // # threads used by parallel foursort
 
 // Example of objects that can be used to populate an array to be sorted:
   // To obtain the int field from X: ((struct intval *) X)->val
@@ -129,10 +129,10 @@ int main (int argc, char *argv[]) {
      // ... and uncomment also testFourSort2 ...
      // testFourSort2();
   // Compare the outputs of two sorting algorithms
-  validateXYZ(); // must provide an other algorithm XYZ
+  // validateXYZ(); // must provide an other algorithm XYZ
      // ... and uncomment validateXYZ ...
   // Measure the sorting time of an algorithm
-     // timeTest();
+  timeTest();
   // Compare the speed fraction of two algorithms
      // compareFoursortAgainstXYZ();
      // ... and uncomment also compareFoursortAgainstXYZ ...
@@ -353,8 +353,8 @@ void timeTest() {
   int seed;
   int seedLimit = 3;
   int z;
-  // int siz = 1024 * 1024 * 16;
-  int siz = 1024 * 1024 * 4;
+  int siz = 1024 * 1024 * 16;
+  // int siz = 1024 * 1024 * 4;
   printf("timeTest() on size: %d \n", siz);
   // construct array
   struct intval *pi;
@@ -395,8 +395,8 @@ void timeTest() {
       // for ( k = 0; k < siz; k++ ) A[k] = 0;
       // for ( k = 0; k < siz; k++ ) A[k] = k%5;
       // for ( k = 0; k < siz; k++ ) A[k] = siz-k;
-      // foursort(A, siz, compareIntVal, NUMTHREADS);
-      callCut2(A, siz, compareIntVal);
+      foursort(A, siz, compareIntVal, NUMTHREADS);
+      // callCut2(A, siz, compareIntVal);
     }
     // ... and subtract the fill time to obtain the sort time
     // algTime = clock() - T - TFill;
@@ -405,7 +405,7 @@ void timeTest() {
     printf("algTime: %f \n", algTime);
     sumTimes = sumTimes + algTime;
   }
-  printf("%s %f %s", "sumTimes: ", sumTimes, "\n");
+  printf("%s %f %s", "average time: ", sumTimes/seedLimit, "\n");
 } // end timeTest()
 
 // Report the speed fraction of two algorithms on a range of array sizes

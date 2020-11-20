@@ -72,7 +72,7 @@ OTHER DEALINGS WITH THE SOFTWARE OR DOCUMENTATION.
 #include <stddef.h>
 #include <stdlib.h>
 #include <math.h>
-
+#include <time.h>
 
 // To avoid compiler warnings:::
 
@@ -121,7 +121,7 @@ void compare00LQAgainstFourSort();
 void compare00BentleyAgainstFourSort();
 void compare00ChenAgainstFourSort();
 void compareXYZAgainstFourSortBT();  // using the Bentley test bench
-int clock();
+// int clock();
 void insertionsort(); 
 void heapc();
 void quicksort0c();
@@ -197,7 +197,7 @@ int main (int argc, char *argv[]) {
      // compareFoursortAgainstXYZ();
      // ... and uncomment also compareFoursortAgainstXYZ ...
   // Whatever here:::
-     // compareQuicksort0AgainstFourSort();
+     compareQuicksort0AgainstFourSort();
      // compareMyQSAgainstFourSort();
      // compareQsortAgainstQuicksort0(); 
      // compareQsortAgainstFourSort();
@@ -555,12 +555,14 @@ void validateChensort() {
 // Run an algorithm and report the time used
 void timeTest() {
   printf("timeTest() of XYZ \n");
-  int algTime, T;
+  double algTime;
+  clock_t T;
   int seed;
   // int seedLimit = 10;
   int seedLimit = 5;
   int z;
   int siz = 1024 * 1024 * 16;
+  // int siz = 1024 * 1024;
   // construct array
   struct intval *pi;
   void **A = myMalloc("timeTest 1", sizeof(pi) * siz);
@@ -572,11 +574,11 @@ void timeTest() {
   int repeat = 5;
   // warm up the process
   fillarray(A, siz, 666); 
-  int sumTimes = 0;
+  double sumTimes = 0;
   for (z = 0; z < repeat; z++) { // repeat to check stability
     algTime = 0;
     // measure the array fill time
-    int TFill = clock();
+    clock_t TFill = clock();
     for (seed = 0; seed < seedLimit; seed++) 
       fillarray(A, siz, seed);
       // here alternative ways to fill the array
@@ -592,9 +594,9 @@ void timeTest() {
       // for ( k = 0; k < siz; k++ ) A[k] = 0;
       // for ( k = 0; k < siz; k++ ) A[k] = k%5;
       // for ( k = 0; k < siz; k++ ) A[k] = siz-k;
-      // foursort(A, siz, compareIntVal);  
+      foursort(A, siz, compareIntVal);  
       // callLQ(A, siz, compareIntVal2);
-      callBentley(A, siz, compareIntVal2);
+      // callBentley(A, siz, compareIntVal2);
       // callChensort(A, siz, compareIntVal2);
       // callMyQS(A, siz, compareIntVal);  
       // callQuicksort0(A, siz, compareIntVal);
@@ -603,10 +605,11 @@ void timeTest() {
     }
     // ... and subtract the fill time to obtain the sort time
     algTime = (clock() - T - TFill)/seedLimit;
-    printf("algTime: %d \n", algTime);
+    algTime = algTime/ CLOCKS_PER_SEC;
+    printf("algTime: %f \n", algTime);
     sumTimes = sumTimes + algTime;
   }
-  printf("%s %d %s", "average: ", sumTimes/repeat, "\n");
+  printf("%s %f %s", "average: ", sumTimes/repeat, "\n");
   // free array
   for (i = 0; i < siz; i++) {
     free(A[i]); 
@@ -619,6 +622,7 @@ void timeTest() {
 void compareAlgorithms00(char *label, int siz, int seedLimit, 
 		   void (*alg1)(), void (*alg2)(),
 		   int (*compare1)(), int (*compare2)() ) {
+  printf("The timings have only comparative relevance.\n");
   printf("%s on size: %d seedLimit: %d\n", label, siz, seedLimit);
   int alg1Time, alg2Time, T;
   int seed;
@@ -700,7 +704,7 @@ void compareFoursortAgainstXYZ() {
   compareAlgorithms("Compare foursort vs XYZ", foursort, XYZ);
 }
 */
-void compareQuicksort0AgainstFoursort() {
+void compareQuicksort0AgainstFourSort() {
   void foursort(), callQuicksort0();
   compareAlgorithms("Compare quicksort0 vs foursort", callQuicksort0, foursort);
 }
