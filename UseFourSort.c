@@ -1,6 +1,6 @@
 /* 
 File: c:/bsd/rigel/sort/Licence.txt
-Date: Sat Jun 09 22:22:31 2012
+Date: Sat Jun 09 22:22:31 2012/ Sat Nov 28 12:44:00 2020
 
 Copyright (c) 2012, Dennis de Champeaux.  All rights reserved.
 
@@ -109,6 +109,7 @@ void timeTest();
 void compareQsortAgainstQuicksort0();
 void compareQsortAgainstFourSort();
 void compareQuicksort0AgainstFourSort();
+void compareFourSortAgainstC2LR();
 void compareMyQSAgainstFourSort();
 void compareLQAgainstFourSort(); // LQ is ako qsort in the Linux C-library
 void compareBentleyAgainstFourSort(); 
@@ -126,10 +127,14 @@ void insertionsort();
 void heapc();
 void quicksort0c();
 void myqs();
-// void iswap();
 void dflgm();
 void introsort();
 void blockSort();
+
+void quicksort0();
+#include "C2LR.c"
+
+
 
 // Example of objects that can be used to populate an array to be sorted:
   // To obtain the int field from X: ((struct intval *) X)->val
@@ -189,25 +194,31 @@ int main (int argc, char *argv[]) {
   // validateIntroSort();
   // validateBlockSort(); 
   // Measure the sorting time of an algorithm
-  timeTest();
+  // timeTest();
   // Compare the outputs of two sorting algorithms
      // validateXYZ(); // must provide an other algorithm XYZ
      // ... and uncomment validateXYZ ...
   // Compare the speed fraction of two algorithms
+  //
+  // It looks like that the compare function is not accurate
+  // Use instead the timeTest
+  // 
      // compareFoursortAgainstXYZ();
      // ... and uncomment also compareFoursortAgainstXYZ ...
-  // Whatever here:::
-     compareQuicksort0AgainstFourSort();
+  // Whatever here::
+     // compareQuicksort0AgainstFourSort();
      // compareMyQSAgainstFourSort();
      // compareQsortAgainstQuicksort0(); 
      // compareQsortAgainstFourSort();
+     // compareFourSortAgainstC2LR();
      // compareLQAgainstFourSort(); // LQ is qsort in the Linux C-library
      // compareBentleyAgainstFourSort();
      // compareBentleyAgainstQuicksort0();
      // compareChenSortAgainstFourSort();
      // compareDFLGMAgainstQuicksort0();
      // compareDFLGMAgainstFourSort();
-     // compareXYZAgainstFourSortBT(); // using the Bentley test-bench
+  // using the Bentley test-bench
+     // compareXYZAgainstFourSortBT(); 
      // validateFourSortBT(); // against heapsort on Bentley test-bench
      // compare00QxAgainstFourSort();
      // compare00LQAgainstFourSort();
@@ -536,7 +547,7 @@ void validateAlgorithm1(char* label, int siz, void (*alg1)(), void (*alg2)() ) {
 
 void validateQsort() {
   void callQuicksort0(), callQsort();
-  validateAlgorithm1("Running validate qsort ...", 1024 * 1024,
+  validateAlgorithm1("Running validate qsort ...", 1024 * 1024 *16,
 		    callQuicksort0, callQsort);
 }
 
@@ -621,7 +632,8 @@ void timeTest() {
 // Report the speed fraction of two algorithms on a range of array sizes
 void compareAlgorithms00(char *label, int siz, int seedLimit, 
 		   void (*alg1)(), void (*alg2)(),
-		   int (*compare1)(), int (*compare2)() ) {
+			 int (*compare1)(), int (*compare2)() ) {
+  seedLimit = seedLimit*3;
   printf("The timings have only comparative relevance.\n");
   printf("%s on size: %d seedLimit: %d\n", label, siz, seedLimit);
   int alg1Time, alg2Time, T;
@@ -692,9 +704,9 @@ void compareAlgorithms2(char *label, int siz, int seedLimit,
  } // end compareAlgorithms2
 
 void compareAlgorithms(char *label, void (*alg1)(), void (*alg2)() ) {
-  // compareAlgorithms0(label, 1024, 32 * 1024, alg1, alg2);
+  compareAlgorithms0(label, 1024, 32 * 1024, alg1, alg2);
   // compareAlgorithms0(label, 16 * 1024 * 1024, 2, alg1, alg2);
-  compareAlgorithms0(label, 1024 * 1024, 32, alg1, alg2);
+  // compareAlgorithms0(label, 1024 * 1024, 32, alg1, alg2);
 } // end compareAlgorithms
 
 
@@ -708,6 +720,17 @@ void compareQuicksort0AgainstFourSort() {
   void foursort(), callQuicksort0();
   compareAlgorithms("Compare quicksort0 vs foursort", callQuicksort0, foursort);
 }
+
+void compareFourSortAgainstC2LR() {
+  void foursort(), callC2LR();
+  compareAlgorithms("Compare foursort vs c2lr", foursort, callC2LR);
+}
+
+void callC2LR(void **A, int size, 
+	int (*compar ) (const void *, const void * ) ) {
+  cut2lr(A, 0, size-1, compar);
+} // end  callC2LR
+
 
 void quicksort0(void **A, int N, int M, int (*compar )());
 void callQuicksort0(void **A, int size, 
