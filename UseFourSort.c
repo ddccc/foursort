@@ -131,7 +131,8 @@ void dflgm();
 void introsort();
 void blockSort();
 
-void quicksort0();
+int med();
+void cut2c();
 #include "C2LR.c"
 
 
@@ -587,7 +588,6 @@ void timeTest() {
   fillarray(A, siz, 666); 
   double sumTimes = 0;
   for (z = 0; z < repeat; z++) { // repeat to check stability
-    algTime = 0;
     // measure the array fill time
     clock_t TFill = clock();
     for (seed = 0; seed < seedLimit; seed++) 
@@ -654,7 +654,6 @@ void compareAlgorithms00(char *label, int siz, int seedLimit,
     for (seed = 0; seed < seedLimit; seed++) 
       fillarray(A, siz, seed);
     for (z = 0; z < 3; z++) { // repeat to check stability
-      alg1Time = 0; alg2Time = 0;
       int TFill = clock();
       for (seed = 0; seed < seedLimit; seed++) 
 	fillarray(A, siz, seed);

@@ -68,7 +68,7 @@ OTHER DEALINGS WITH THE SOFTWARE OR DOCUMENTATION.
 #include <sys/time.h>
 #include <math.h>
 
-int NUMTHREADS = 4; // # threads used by parallel foursort
+int NUMTHREADS = 1; // # threads used by parallel foursort
 
 // Example of objects that can be used to populate an array to be sorted:
   // To obtain the int field from X: ((struct intval *) X)->val
@@ -369,7 +369,6 @@ void timeTest() {
   fillarray(A, siz, 666); 
   float sumTimes = 0;
   for (z = 0; z < 3; z++) { // repeat to check stability
-    algTime = 0;
     // measure the array fill time
     // int TFill = clock();
       struct timeval tim;
@@ -431,7 +430,6 @@ void compareAlgorithms0(char *label, int siz, int seedLimit, void (*alg1)(), voi
       fillarray(A, siz, seed);
     for (z = 0; z < 4; z++) { // repeat to check stability
     // for (z = 0; z < 1; z++) { // repeat to check stability
-      alg1Time = 0; alg2Time = 0;
       // int TFill = clock();
         struct timeval tim;
         gettimeofday(&tim, NULL);
