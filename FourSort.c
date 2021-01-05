@@ -72,7 +72,8 @@ char* expiration = "*** License for foursort has expired ...\n";
 #include "Dsort.c"  // dflgm member
 // */
 
-#include "Qusort.c" // quicksort member
+// #include "Qusort.c" // quicksort member
+#include "D3sort.c" // dflgm3
 #include "C2sort.c" // cut2 member
 
 void foursort(void **AA, int size, 

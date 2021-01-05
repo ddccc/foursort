@@ -131,9 +131,10 @@ void dflgm();
 void introsort();
 void blockSort();
 
-int med();
 void cut2c();
+void dflgm3();
 #include "C2LR.c"
+#include "Qusort.c"
 
 
 
@@ -2247,7 +2248,15 @@ void introsort(void **A, int N, int M, int (*compare)()) {
   insertion(A, N, M, compare);
 } // end introsort
 
-int med();
+// calculate the median of 3
+int medi(void **A, int a, int b, int c,
+	int (*compareXY ) (const void *, const void * ) ) {
+  return
+    compareXY( A[a], A[b] ) < 0 ?
+    ( compareXY( A[b], A[c] ) < 0 ? b : compareXY( A[a], A[c] ) < 0 ? c : a)
+    : compareXY( A[b], A[c] ) > 0 ? b : compareXY( A[a], A[c] ) > 0 ? c : a;
+} // end medi
+
 
 int partition();
 void introsort_r(void **A, int first, int last, int depth, int (*compare)()) {
@@ -2263,7 +2272,7 @@ void introsort_r(void **A, int first, int last, int depth, int (*compare)()) {
       depth--;
       int pivot; 
       int middle = 1 + first + (last - first)/2;
-      int m = med(A, first, middle, last, compare);
+      int m = medi(A, first, middle, last, compare);
       pivot = partition(A, first, last, m, compare);
       introsort_r(A, pivot, last, depth, compare);
       last = pivot;
@@ -2367,11 +2376,11 @@ void blockSortc(void **A, int N, int M, int indexL[], int indexR[],
     int pn = M;
     if (L > 40) { // do median of 9
       int d = L/8;
-      pl = med(A, pl, pl + d, pl + 2 * d, compareXY);
-      pm = med(A, pm - d, pm, pm + d, compareXY);
-      pn = med(A, pn - 2 * d, pn - d, pn, compareXY);
+      pl = medi(A, pl, pl + d, pl + 2 * d, compareXY);
+      pm = medi(A, pm - d, pm, pm + d, compareXY);
+      pn = medi(A, pn - 2 * d, pn - d, pn, compareXY);
     }
-    pm = med(A, pl, pm, pn, compareXY); // pm is index to 'best' pivot ...
+    pm = medi(A, pl, pm, pn, compareXY); // pm is index to 'best' pivot ...
 
     // iter last = end - 1 ;
     int last = M, begin = N;
