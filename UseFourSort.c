@@ -760,7 +760,7 @@ void myqsc();
 void myqs(void **A, int N, int M, int (*compar )) {
   int L = M-N;
   if (L <= 0) return;
-  int dp = 2.5 * floor(log(L));
+  int dp = 2.9 * floor(log(L));
   myqsc(A, N, M, dp, compar);
 }
 // void dflgm();
@@ -2176,7 +2176,7 @@ void dflgmc(void **A, int N, int M, int depthLimit, int (*compareXY)());
 void dflgm2(void **A, int N, int M, int (*compareXY)()) {
   // printf("dflgm2 N %i M %i\n", N, M);
   int L = M - N;
-  int depthLimit = 2.5 * floor(log(L));
+  int depthLimit = 2.9 * floor(log(L));
   dflgmc(A, N, M, depthLimit, compareXY);
 } // end dflgm2
 
@@ -2242,7 +2242,7 @@ void insertion();
 void introsort(void **A, int N, int M, int (*compare)()) {
   // introsort_r ( a, 0, n-1, (int(2*log(double(n)))));
   int L = M-N;
-  int dp = 2.5 * floor(log(L));
+  int dp = 2.9 * floor(log(L));
   introsort_r(A, N, M, dp, compare);
   // _insertion(a, n);
   insertion(A, N, M, compare);
@@ -2346,7 +2346,7 @@ const int BLOCKSIZE = 128;
 void blockSort(void **A, int N, int M, int (*compar )) {
   int L = M-N;
   if (L <= 0) return;
-  int dp = 2.5 * floor(log(L));
+  int dp = 2.9 * floor(log(L));
   int indexL[BLOCKSIZE], indexR[BLOCKSIZE];
   blockSortc(A, N, M, indexL, indexR, dp, compar);
 }
