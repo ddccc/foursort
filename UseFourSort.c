@@ -133,8 +133,9 @@ void blockSort();
 
 void cut2c();
 void dflgm3();
+// #include "Qusort.c"
 #include "C2LR.c"
-#include "Qusort.c"
+
 
 
 

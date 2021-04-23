@@ -16,15 +16,10 @@ void cut2(void **A, int N, int M, int (*compare)()) {
   int L = M - N;
   int depthLimit = 1 + 2.9 * floor(log(L));
   if ( L < cut2Limit ) { 
-    dflgm3(A, N, M, depthLimit, compare);
-    return;
-  }
-  /*
-  if ( L < cut2Limit ) { 
+    // dflgm3(A, N, M, depthLimit, compare);
     quicksort0c(A, N, M, depthLimit, compare);
     return;
   }
-  */
   cut2c(A, N, M, depthLimit, compare);
 } // end cut2
 
@@ -48,19 +43,11 @@ void cut2c(void **A, int N, int M, int depthLimit, int (*compareXY)()) {
     return;
   }
   depthLimit--;
-  // /*
   if ( L < cut2Limit ) { 
-    dflgm3(A, N, M, depthLimit, compareXY);
-    return;
-  }
-  // */
-  /*
-    // Mon Jan 04 11:04:50 2021 Give up on this version
-  if ( L < cut2Limit ) { 
+    // dflgm3(A, N, M, depthLimit, compareXY);
     quicksort0c(A, N, M, depthLimit, compareXY);
     return;
   }
-  // */
 
   register void *T; // pivot
   register int I = N, J = M; // indices

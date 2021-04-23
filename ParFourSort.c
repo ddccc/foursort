@@ -81,9 +81,9 @@ int NUMTHREADS;
 #include "Hsort.c"
 #include "Dsort.c"
 // */
-// #include "Qusort.c"
+#include "Qusort.c"
 #include "Qstack.c"
-#include "D3sort.c" // dflgm3
+// #include "D3sort.c" // dflgm3
 #include "C2sort.c" // cut2 member
 
 struct stack *ll;
