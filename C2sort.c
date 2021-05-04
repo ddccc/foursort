@@ -3,9 +3,10 @@
 // Mon Jan 04 10:43:49 2021
 // (C) OntoOO/ Dennis de Champeaux
 
-// Mon Jan 04 11:11:11 2021 quicksort0 has been removed
 
-const int cut2Limit =  600; 
+const int cut2Limit =  800;
+// extern int icnt; // invocation cnt
+
 
 void cut2c();
 // cut2 is used as a best in class quicksort implementation 
@@ -15,9 +16,11 @@ void cut2(void **A, int N, int M, int (*compare)()) {
   // printf("cut2 %d %d %d\n", N, M, M-N);
   int L = M - N;
   int depthLimit = 1 + 2.9 * floor(log(L));
+
   if ( L < cut2Limit ) { 
+    // quicksort0c(A, N, M, depthLimit, compare);
     // dflgm3(A, N, M, depthLimit, compare);
-    quicksort0c(A, N, M, depthLimit, compare);
+    quicksortmc(A, N, M, depthLimit, compare);
     return;
   }
   cut2c(A, N, M, depthLimit, compare);
@@ -43,11 +46,16 @@ void cut2c(void **A, int N, int M, int depthLimit, int (*compareXY)()) {
     return;
   }
   depthLimit--;
+
   if ( L < cut2Limit ) { 
+    // quicksort0c(A, N, M, depthLimit, compareXY);
     // dflgm3(A, N, M, depthLimit, compareXY);
-    quicksort0c(A, N, M, depthLimit, compareXY);
+    quicksortmc(A, N, M, depthLimit, compareXY);
     return;
   }
+  // icnt++; // invocation cnt
+
+
 
   register void *T; // pivot
   register int I = N, J = M; // indices

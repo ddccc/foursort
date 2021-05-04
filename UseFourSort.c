@@ -78,7 +78,7 @@ OTHER DEALINGS WITH THE SOFTWARE OR DOCUMENTATION.
 
 void callCut2(void **AA, int size, 
 	      int (*compar ) (const void *, const void * ) );
-void callQuicksort0(void **AA, int size, int (*compar ) () );
+void callQuicksortm(void **AA, int size, int (*compar ) () );
 // void callQsort(void **A, int size, int (*compar ) () );
 void callDflgm2(void **AA, int size, int (*compar ) () );
 void foursort(void **AA, int size, 
@@ -89,7 +89,7 @@ void callChensort(void **A, int size, int (*compar ) () );
 void callMyQS(void **A, int size, int (*compar ) () ); 
 void callBlockSort(void **A, int size, int (*compar ) () ); 
 void testQsort();
-void testQuicksort0();
+void testQuicksortm();
 void testIntroSort();
 void testDFLGM();
 void testFourSort();
@@ -115,7 +115,7 @@ void compareLQAgainstFourSort(); // LQ is ako qsort in the Linux C-library
 void compareBentleyAgainstFourSort(); 
 void compareBentleyAgainstQuicksort0(); 
 void compareChenSortAgainstFourSort();
-void compareDFLGMAgainstQuicksort0();
+void compareDFLGMAgainstQuicksortm();
 void compareDFLGMAgainstFourSort();
 void compare00QxAgainstFourSort();
 void compare00LQAgainstFourSort();
@@ -125,7 +125,7 @@ void compareXYZAgainstFourSortBT();  // using the Bentley test bench
 // int clock();
 void insertionsort(); 
 void heapc();
-void quicksort0c();
+void quicksortmc();
 void myqs();
 void dflgm();
 void introsort();
@@ -179,7 +179,7 @@ int main (int argc, char *argv[]) {
   // To ask for the license expiration date and the host
      // foursort(0, 0, 0);
   // To check that a sorted array is produced
-  // testQuicksort0();
+  // testQuicksortm();
   // testFourSort(); 
      // testDFLGM(); 
      // testQsort();
@@ -209,16 +209,16 @@ int main (int argc, char *argv[]) {
      // compareFoursortAgainstXYZ();
      // ... and uncomment also compareFoursortAgainstXYZ ...
   // Whatever here::
-     // compareQuicksort0AgainstFourSort();
+     // compareQuicksortmAgainstFourSort();
      // compareMyQSAgainstFourSort();
-     // compareQsortAgainstQuicksort0(); 
+     // compareQsortAgainstQuicksortm(); 
      // compareQsortAgainstFourSort();
      // compareFourSortAgainstC2LR();
      // compareLQAgainstFourSort(); // LQ is qsort in the Linux C-library
      // compareBentleyAgainstFourSort();
-     // compareBentleyAgainstQuicksort0();
+     // compareBentleyAgainstQuicksortm();
      // compareChenSortAgainstFourSort();
-     // compareDFLGMAgainstQuicksort0();
+     // compareDFLGMAgainstQuicksortm();
      // compareDFLGMAgainstFourSort();
   // using the Bentley test-bench
      // compareXYZAgainstFourSortBT(); 
@@ -358,11 +358,11 @@ void testDFLGM() {
   testAlgorithm0("Check dflgm()", 1024*1024*2, callDflgm2);
 } // end testDFLGM()
 
-void testQuicksort0() {
-  void callQuicksort0();
-  // testAlgorithm0("Check quicksort0()", 1024*1024, callQuicksort0);
-  // testAlgorithm0("Check quicksort0()", 101, callQuicksort0);
-  testAlgorithm0("Check quicksort0()", 10000, callQuicksort0);
+void testQuicksortm() {
+  void callQuicksortm();
+  // testAlgorithm0("Check quicksortm()", 1024*1024, callQuicksortm);
+  // testAlgorithm0("Check quicksortm()", 101, callQuicksortm);
+  testAlgorithm0("Check quicksortm()", 10000, callQuicksortm);
 } // end testQuicksort0() 
 
 void testQsort() {
@@ -465,38 +465,38 @@ void validateXYZ() {
 }
  */
 void validateHeapSort() { // they validate each other :-)
-  void callQuicksort0(), callHeapsort();
+  void callQuicksortm(), callHeapsort();
   validateAlgorithm("Running validate HeapSort ...",
-		    callQuicksort0, callHeapsort);
+		    callQuicksortm, callHeapsort);
 }
 void validateFourSort() {
-  void callQuicksort0(), foursort();
+  void callQuicksortm(), foursort();
   validateAlgorithm("Running validate FourSort ...",
-		    callQuicksort0, foursort);
+		    callQuicksortm, foursort);
 }
 
 void validateMyQS() {
-  void callQuicksort0(), callMyQS();
+  void callQuicksortm(), callMyQS();
   validateAlgorithm("Running validate myqs ...",
-		    callQuicksort0, callMyQS);
+		    callQuicksortm, callMyQS);
 }
 
 void validateDFLGM() {
-  void callQuicksort0(), callDflgm2();
+  void callQuicksortm(), callDflgm2();
   validateAlgorithm("Running validate DFLGM ...",
-		    callQuicksort0, callDflgm2);
+		    callQuicksortm, callDflgm2);
 }
 
 void validateIntroSort() {
-  void callQuicksort0(), callIntroSort();
+  void callQuicksortm(), callIntroSort();
   validateAlgorithm("Running validate introSort...",
-		    callQuicksort0, callIntroSort);
+		    callQuicksortm, callIntroSort);
 }
 
 void validateBlockSort() {
-  void callQuicksort0(), callBloackSort();
+  void callQuicksortm(), callBloackSort();
   validateAlgorithm("Running validate blockSort...",
-		    callQuicksort0, callBlockSort);
+		    callQuicksortm, callBlockSort);
 }
 
 // Note:
@@ -549,21 +549,21 @@ void validateAlgorithm1(char* label, int siz, void (*alg1)(), void (*alg2)() ) {
 } // end validateAlgorithm1
 
 void validateQsort() {
-  void callQuicksort0(), callQsort();
+  void callQuicksortm(), callQsort();
   validateAlgorithm1("Running validate qsort ...", 1024 * 1024 *16,
-		    callQuicksort0, callQsort);
+		    callQuicksortm, callQsort);
 }
 
 void validateBentley() {
-  void callQuicksort0(), callBentley();
+  void callQuicksortm(), callBentley();
   validateAlgorithm1("Running validate bentley  ...",  1024 * 1024,
-		    callQuicksort0, callBentley);
+		    callQuicksortm, callBentley);
 }
 
 void validateChensort() {
-  void callQuicksort0(), callChensort();
+  void callQuicksortm(), callChensort();
   validateAlgorithm1("Running validate Chensort ...",  1024 * 1024 *16,
-		     callQuicksort0, callChensort);
+		     callQuicksortm, callChensort);
 }
 
 // Run an algorithm and report the time used
@@ -612,7 +612,7 @@ void timeTest() {
       // callBentley(A, siz, compareIntVal2);
       // callChensort(A, siz, compareIntVal2);
       // callMyQS(A, siz, compareIntVal);  
-      // callQuicksort0(A, siz, compareIntVal);
+      // callQuicksortm(A, siz, compareIntVal);
       // callDflgm2(A, siz, compareIntVal);
       // callBlockSort(A, siz, compareIntVal);
     }
@@ -717,9 +717,9 @@ void compareFoursortAgainstXYZ() {
   compareAlgorithms("Compare foursort vs XYZ", foursort, XYZ);
 }
 */
-void compareQuicksort0AgainstFourSort() {
-  void foursort(), callQuicksort0();
-  compareAlgorithms("Compare quicksort0 vs foursort", callQuicksort0, foursort);
+void compareQuicksortmAgainstFourSort() {
+  void foursort(), callQuicksortm();
+  compareAlgorithms("Compare quicksortm vs foursort", callQuicksortm, foursort);
 }
 
 void compareFourSortAgainstC2LR() {
@@ -733,11 +733,11 @@ void callC2LR(void **A, int size,
 } // end  callC2LR
 
 
-void quicksort0(void **A, int N, int M, int (*compar )());
-void callQuicksort0(void **A, int size, 
+void quicksortm(void **A, int N, int M, int (*compar )());
+void callQuicksortm(void **A, int size, 
 	int (*compar ) (const void *, const void * ) ) {
-  quicksort0(A, 0, size-1, compar);
-} // end callQuicksort0
+  quicksortm(A, 0, size-1, compar);
+} // end callQuicksortm
 
 void callIntroSort(void **A, int size, 
 	int (*compar ) (const void *, const void * ) ) {
@@ -766,7 +766,7 @@ void myqs(void **A, int N, int M, int (*compar )) {
 }
 // void dflgm();
 // void heapc();
-// void quicksort0c();
+// void quicksortmc();
 void myqsc(void **A, int N, int M, 
 	   int depthLimit, int (*compareXY)()) {
   int L;
@@ -780,7 +780,7 @@ void myqsc(void **A, int N, int M,
   }
   /*
   if ( L < 127 ) { 
-    quicksort0c(A, N, M, depthLimit, compareXY);
+    quicksortmc(A, N, M, depthLimit, compareXY);
     return;
   }
   */
@@ -879,11 +879,11 @@ void callDflgm2(void **A, int size, int (*compar )() ) {
 } // end callDflgm2
 
 
-void compareQsortAgainstQuicksort0() {
-   void callQsort(), callQuicksort0();
-   compareAlgorithms2("Compare qsort vs quicksort0", 1024 * 1024, 32,
-		      callQsort, callQuicksort0);
- } // end compareQsortAgainstQuicksort0
+void compareQsortAgainstQuicksortm() {
+   void callQsort(), callQuicksortm();
+   compareAlgorithms2("Compare qsort vs quicksortm", 1024 * 1024, 32,
+		      callQsort, callQuicksortm);
+ } // end compareQsortAgainstQuicksortm
 
 void compareQsortAgainstFourSort() {
    void callQsort(), callCut2();
@@ -910,12 +910,12 @@ void compareBentleyAgainstFourSort() {
 		      callBentley, callCut2);
 } // end compareBentleyAgainstFourSort
 
-void compareBentleyAgainstQuicksort0() { 
-  void callBentley(), callQuicksort0();
-   compareAlgorithms2("Compare bentley vs quicksort0", 1024, 32 * 1024,
-   // compareAlgorithms2("Compare bentley vs quicksort0", 1024 * 1024, 32,
-		      callBentley, callQuicksort0);
-} // end compareBentleyAgainstQuicksort0
+void compareBentleyAgainstQuicksortm() { 
+  void callBentley(), callQuicksortm();
+   compareAlgorithms2("Compare bentley vs quicksortm", 1024, 32 * 1024,
+   // compareAlgorithms2("Compare bentley vs quicksortm", 1024 * 1024, 32,
+		      callBentley, callQuicksortm);
+} // end compareBentleyAgainstQuicksortm
 
 void compareChenSortAgainstFourSort() { 
   void callChensort(), callCut2();
@@ -923,11 +923,11 @@ void compareChenSortAgainstFourSort() {
 		     callChensort, callCut2);
 } // end compareChenSortAgainstFourSort()
 
-void compareDFLGMAgainstQuicksort0() {
-  void callDflgm2(), callQuicksort0();
-  compareAlgorithms0("Compare DFLGM vs quicksort0", 1024 * 1024, 32,
-		     callDflgm2, callQuicksort0);
-} // end compareDFLGMAgainstQuicksort0()
+void compareDFLGMAgainstQuicksortm() {
+  void callDflgm2(), callQuicksortm();
+  compareAlgorithms0("Compare DFLGM vs quicksortm", 1024 * 1024, 32,
+		     callDflgm2, callQuicksortm);
+} // end compareDFLGMAgainstQuicksortm()
 
 void compareDFLGMAgainstFourSort() {
   void callDflgm2(), callCut2();
@@ -1522,12 +1522,12 @@ void compareZeros00(char *label, int siz, int seedLimit,
 } // end compareZeros00
 
 
-// used to compare two versions of quicksort0:
+// used to compare two versions of quicksortm:
 // without and the with delegation to dflgm
 void compare00QxAgainstFourSort() {
-  void callQuicksort0(), foursort();
+  void callQuicksortm(), foursort();
   compareZeros00("compare00QxAgainstFoursort", 
-		 1024*1024, 16, callQuicksort0, foursort, 
+		 1024*1024, 16, callQuicksortm, foursort, 
 		 compareIntVal, compareIntVal);
 } // end compare00QxAgainstFourSort
 
@@ -2126,7 +2126,7 @@ void compareXYZAgainstFourSortBT() {
 	    slopes(B, siz, m, tweak);
 
 	    foursort(B, siz, compareIntVal); 
-	    // callQuicksort0(B, siz, compareIntVal); 
+	    // callQuicksortm(B, siz, compareIntVal); 
 	  }
 	  cut2Time = cut2Time + clock() - T - TFill;
 	  sumCut2 += cut2Time;
@@ -2189,7 +2189,7 @@ void dflgmc(void **A, int N, int M, int depthLimit, int (*compareXY)()) {
   }
   int L = M - N;
   if ( L < 50 ) { 
-    quicksort0c(A, N, M, depthLimit, compareXY);
+    quicksortmc(A, N, M, depthLimit, compareXY);
     return;
   }
   depthLimit--;
