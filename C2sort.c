@@ -4,7 +4,7 @@
 // (C) OntoOO/ Dennis de Champeaux
 
 
-const int cut2Limit =  800;
+const int cut2Limit =  600;
 // extern int icnt; // invocation cnt
 
 
@@ -31,6 +31,7 @@ void cut2(void **A, int N, int M, int (*compare)()) {
 void cut2c(void **A, int N, int M, int depthLimit, int (*compareXY)()) {
   int L;
  Start:
+  // printf("cut2c %d %d %d\n", N, M, M-N);
   L = M - N + 1;
   if ( L <= 1 ) return;
 
