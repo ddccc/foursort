@@ -82,7 +82,7 @@ void callQuicksortm(void **AA, int size, int (*compar ) () );
 // void callQsort(void **A, int size, int (*compar ) () );
 void callDflgm2(void **AA, int size, int (*compar ) () );
 void foursort(void **AA, int size, 
-	      int (*compar ) (const void *, const void * ));
+ 	      int (*compar ) (const void *, const void * ));
 void callLQ(void **A, int size, int (*compar ) () ); 
 void callBentley(void **A, int size, int (*compar ) () );
 void callChensort(void **A, int size, int (*compar ) () ); 
@@ -134,9 +134,8 @@ void blockSort();
 void cut2c();
 void dflgm3();
 // #include "Qusort.c"
-#include "C2LR.c"
-
-
+void cut2lr();
+#include "C2LR.h"
 
 
 // Example of objects that can be used to populate an array to be sorted:
@@ -1100,7 +1099,7 @@ void callBentley(void **A, int size, int (*compar ) () ) {
 
 
 // #include <_ansi.h>
-#include <stdlib.h>
+// #include <stdlib.h>
 
 #ifndef __GNUC__
 #define inline
@@ -1581,7 +1580,7 @@ void compare00ChenAgainstFourSort() {
 
 #include <alloca.h>
 #include <limits.h>
-#include <stdlib.h>
+// #include <stdlib.h>
 #include <string.h>
 
 /* Byte-wise swap two items of size SIZE. */
@@ -1827,8 +1826,8 @@ void callLQ(void **A, int size, int (*compar ) () ) {
 // From: http://www.gtoal.com/languages/bcpl/BCPL/bcplprogs/sort/AdoSymmetryPSort.cpp
 
 // #include <conio.h>
-#include <stdlib.h>
-#include <stdio.h>
+// #include <stdlib.h>
+// #include <stdio.h>
 // #include <dos.h>
 #define SIZE_n 45
 #define ItemType int

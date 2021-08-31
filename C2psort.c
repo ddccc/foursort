@@ -5,6 +5,7 @@
 const int cut2pLimit =  1150; 
 
 void cut2pc();
+void cut2c();
 // cut2 is used as a best in class quicksort implementation 
 // with a defense against quadratic behavior due to duplicates
 // cut2 is a support function to call up the workhorse cut2c

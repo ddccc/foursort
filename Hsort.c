@@ -1,4 +1,4 @@
-// c:/bsd/rigel/sort/Hsort
+// c:/bsd/rigel/sort/Hsort.c
 // Date: Fri Jan 31 13:22:27 2014
 // (C) OntoOO/ Dennis de Champeaux
 
@@ -11,6 +11,7 @@ void iswap(int p, int q, void **A) {
 */
 
 #define iswap(p, q, A) { void *t3t = A[p]; A[p] = A[q]; A[q] = t3t; }
+
 
 // #include "Isort.c" // insertionsort member
 

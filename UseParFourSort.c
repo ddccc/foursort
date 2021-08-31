@@ -68,6 +68,8 @@ OTHER DEALINGS WITH THE SOFTWARE OR DOCUMENTATION.
 #include <sys/time.h>
 #include <math.h>
 
+// #include "Hsort.h"
+
 int NUMTHREADS = 1; // # threads used by parallel foursort
 
 // Example of objects that can be used to populate an array to be sorted:
@@ -673,13 +675,6 @@ void slopes(void **A, int n, int m, int tweak) {
   dither(A, n);
 } // end slopes
 
-
-void heapSort();
-void callHeapSort(void **A, int size, 
-	 int (*compar ) (const void *, const void * ) ) {
-  heapSort(A, size, compar);
-} // end callHeapSort
-
 void validateFourSortBT() {  // validation on the Bentley bench test against heapsort
   printf("Entering validateFourSortBT Sawtooth ........\n");
   // printf("Entering validateFourSortBT Rand2 ........\n");
@@ -740,7 +735,7 @@ void validateFourSortBT() {  // validation on the Bentley bench test against hea
 	    // plateau(A, siz, m, tweak);
 	    // shuffle(A, siz, m, tweak, seed);
 	    // stagger(A, siz, m, tweak);
-	    callHeapSort(A, siz, compareIntVal);
+	    heapc(A, 0, siz-1, compareIntVal);
 	  }
 	  sortcBTime = sortcBTime + clock() - T - TFill;
 	  sumQsortB += sortcBTime;
