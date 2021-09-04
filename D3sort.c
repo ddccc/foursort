@@ -2,6 +2,19 @@
 // Date: Mon Jan 04 18:42:53 2021
 // (C) OntoOO/ Dennis de Champeaux
 
+#ifndef isort
+#define isort 1
+#include "Isort.h"
+#endif
+#ifndef hsort
+#define hsort 1
+#include "Hsort.h"
+#endif
+#ifndef dsort
+#define dsort 1
+#include "Dsort.h"
+#endif
+
 // calculate the median of 3
 int med(void **A, int a, int b, int c,
 	int (*compareXY ) (const void *, const void * ) ) {

@@ -6,8 +6,8 @@
 
 // This version combines isort + dflgm + ( pivot sample + (fast loops | dflgm ) )
 
-const int dflgmLimit2 = 250;
-const int iLimit2 = 9;
+// const int dflgmLimit2 = 250;
+// const int iLimit2 = 9;
 
 void cut2c();
 // cut2 is used as a best in class quicksort implementation 
@@ -29,7 +29,8 @@ int medq2(void **A, int a, int b, int c,
 } // end medq2
 
 void cut2c(void **A, int lo, int hi, int depthLimit, 
-		 int (*compareXY)(const void*, const void*)) {
+	   int (*compareXY)(const void*, const void*)) {
+
   // printf("Enter cut2c lo: %d hi: %d %d\n", lo, hi, depthLimit);
   // printf(" gap %d \n", hi-lo);
 

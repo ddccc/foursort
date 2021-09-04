@@ -66,15 +66,17 @@ char* expiration = "*** License for foursort has expired ...\n";
 // void **A;
 
 // the members of FourSort
-// /*
+/*
 #include "Isort.c"
 #include "Hsort.c"
 #include "Dsort.c"  // dflgm member
 // */
 
-#include "Qusortm.c" // quicksort member
+// #include "C2sort.h" // cut2 member
+// #include "Qusortm.h" // quicksort member
 // #include "D3sort.c" // dflgm3
-#include "C2sort.c" // cut2 member
+
+void cut2(void **A, int lo, int hi, int (*compare)());
 
 void foursort(void **AA, int size, 
 	int (*compar ) (const void *, const void * ) ) {

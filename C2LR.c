@@ -2,11 +2,11 @@
 // Date: Wed Jun 10 15:37:30 2020, Fri May 28 21:24:28 2021
 // (C) OntoOO/ Dennis de Champeaux
 
-/*
-const int cut2LRLimit =  700; 
-const int bufSize = 200;
-#define iswap(p, q, A) { void *t3t = A[p]; A[p] = A[q]; A[q] = t3t; }
-// */ 
+// const int cut2LRLimit =  700; 
+// const int bufSize = 200;
+// #define iswap(p, q, A) { void *t3t = A[p]; A[p] = A[q]; A[q] = t3t; }
+
+// void cut2(void **A, int lo, int hi, int (*compare)()) {}
 
 void cut2lrc();
 
