@@ -2,21 +2,8 @@
 // Date: Mon Jan 04 18:42:53 2021
 // (C) OntoOO/ Dennis de Champeaux
 
-#ifndef isort
-#define isort 1
-#include "Isort.h"
-#endif
-#ifndef hsort
-#define hsort 1
-#include "Hsort.h"
-#endif
-#ifndef dsort
-#define dsort 1
-#include "Dsort.h"
-#endif
-
 // calculate the median of 3
-int med(void **A, int a, int b, int c,
+static int med(void **A, int a, int b, int c,
 	int (*compareXY ) (const void *, const void * ) ) {
   return
     compareXY( A[a], A[b] ) < 0 ?
@@ -24,7 +11,7 @@ int med(void **A, int a, int b, int c,
     : compareXY( A[b], A[c] ) > 0 ? b : compareXY( A[a], A[c] ) > 0 ? c : a;
 } // end med
 
-void dflgm3();
+static void dflgm3();
 // dflgm0 is used as the driver of a sorter using dflgm3
 void dflgm0(void **A, int lo, int hi, int (*compareXY)(const void*, const void*)) {
     // printf("dflgm0 %d %d %d\n", lo, hi, hi-lo);

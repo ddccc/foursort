@@ -77,21 +77,20 @@ int NUMTHREADS;
 
 // the members of ParFourSort
 // /*
-#include "Isort.h"
-#include "Hsort.h"
-#include "Dsort.h"
+#include "Isort.c"
+#include "Hsort.c"
+#include "Dsort.c"
 // */
-#include "Qusortm.h"
+#include "Qusortm.c"
 #include "Qstack.c"
 // #include "D3sort.c" // dflgm3
-#include "C2sort.h" // cut2 member
+#include "C2sort.c" // cut2 member
 
 struct stack *ll;
 struct task * newTask();
 void addTaskSynchronized();
-void cut2pc(void **A, int lo, int hi, int depthLimit, int (*compareXY)()) {}
 
-#include "C2psort.h" // cut2p member
+#include "C2psort.c" // cut2p member
 
 void *myMallocSS(char* location, int size) {
   void *p = malloc(size);

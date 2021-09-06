@@ -74,40 +74,15 @@ OTHER DEALINGS WITH THE SOFTWARE OR DOCUMENTATION.
 #include <math.h>
 #include <time.h>
 
-// #include "C2sort.h" 
-#include "FourSort.h"
-// #include "FourSort.c"
-#include "C2LR.h"
-#include "Qusortm.h"
-/*
-#ifndef isort
-#define isort 1
-#include "Isort.h"
-#endif
-#ifndef hsort
-#define hsort 1
-#include "Hsort.h"
-#endif
-#ifndef dsort
-#define dsort 1
-#include "Dsort.h"
-#endif
-// */
 // To avoid compiler warnings:::
-
-// void cut2lr(void **A, int lo, int hi, int (*compare)());
-// void foursort(void **AA, int size, 
-//  	      int (*compar ) (const void *, const void * ) );
-void quicksortmc(void **, int, int, int, 
-		 int (*)(const void*, const void*));
 
 void callCut2(void **AA, int size, 
 	      int (*compar ) (const void *, const void * ) );
 void callQuicksortm(void **AA, int size, int (*compar ) () );
 // void callQsort(void **A, int size, int (*compar ) () );
 void callDflgm2(void **AA, int size, int (*compar ) () );
-// void foursort(void **AA, int size, 
-//      	      int (*compar ) (const void *, const void * ));
+void foursort(void **AA, int size, 
+	      int (*compar ) (const void *, const void * ));
 void callLQ(void **A, int size, int (*compar ) () ); 
 void callBentley(void **A, int size, int (*compar ) () );
 void callChensort(void **A, int size, int (*compar ) () ); 
@@ -148,18 +123,20 @@ void compare00BentleyAgainstFourSort();
 void compare00ChenAgainstFourSort();
 void compareXYZAgainstFourSortBT();  // using the Bentley test bench
 // int clock();
-// void insertionsort(); 
-// void heapc();
+void insertionsort(); 
+void heapc();
 void quicksortmc();
 void myqs();
-// void dflgm();
+void dflgm();
 void introsort();
 void blockSort();
 
-// void cut2c();
+void cut2c();
 void dflgm3();
 // #include "Qusort.c"
-// void cut2lr();
+#include "C2LR.c"
+
+
 
 
 // Example of objects that can be used to populate an array to be sorted:
@@ -323,7 +300,7 @@ void check(void **A, int N, int M) {
   printf("check # errors: %d\n", cnt);
 } // end check
 
-void heapSort();
+// void heapSort();
 void callHeapsort(void **A, int size, 
 	 int (*compar ) (const void *, const void * ) ) {
   // heapSort(A, size, compar);
@@ -373,7 +350,7 @@ void testAlgorithm(char* label, void (*alg1)() ) {
 
 // /* Example: use of testAlgorithm
 void testFourSort() {
-  // void foursort();
+  void foursort();
   testAlgorithm("Running foursort ...", foursort);
 }
 //  */
@@ -494,8 +471,7 @@ void validateHeapSort() { // they validate each other :-)
 		    callQuicksortm, callHeapsort);
 }
 void validateFourSort() {
-  // void callQuicksortm(), foursort();
-  void callQuicksortm();
+  void callQuicksortm(), foursort();
   validateAlgorithm("Running validate FourSort ...",
 		    callQuicksortm, foursort);
 }
@@ -738,19 +714,17 @@ void compareAlgorithms(char *label, void (*alg1)(), void (*alg2)() ) {
 
 /* Example, replace XYZ by what you want to compare against
 void compareFoursortAgainstXYZ() {
-  void foursort(), XYZ();
+  int foursort(), XYZ();
   compareAlgorithms("Compare foursort vs XYZ", foursort, XYZ);
 }
 */
 void compareQuicksortmAgainstFourSort() {
-  //  void foursort(), callQuicksortm();
-  void callQuicksortm();
+  void foursort(), callQuicksortm();
   compareAlgorithms("Compare quicksortm vs foursort", callQuicksortm, foursort);
 }
 
 void compareFourSortAgainstC2LR() {
-  // void foursort(), callC2LR();
-  void callC2LR();
+  void foursort(), callC2LR();
   compareAlgorithms("Compare foursort vs c2lr", foursort, callC2LR);
 }
 
@@ -772,8 +746,7 @@ void callIntroSort(void **A, int size,
 } // end callIntroSort
 
 void compareMyQSAgainstFourSort() {
-  // void foursort(), callMyQS();
-  void callMyQS();
+  void foursort(), callMyQS();
   compareAlgorithms("Compare myqs vs foursort", callMyQS, foursort);
   // compareAlgorithms("Compare myqs vs foursort", foursort, callMyQS);
 } // end compareMyQSAgainstFourSort
@@ -1128,7 +1101,7 @@ void callBentley(void **A, int size, int (*compar ) () ) {
 
 
 // #include <_ansi.h>
-// #include <stdlib.h>
+#include <stdlib.h>
 
 #ifndef __GNUC__
 #define inline
@@ -1553,24 +1526,21 @@ void compareZeros00(char *label, int siz, int seedLimit,
 // used to compare two versions of quicksortm:
 // without and the with delegation to dflgm
 void compare00QxAgainstFourSort() {
-  // void callQuicksortm(), foursort();
-  void callQuicksortm();
+  void callQuicksortm(), foursort();
   compareZeros00("compare00QxAgainstFoursort", 
 		 1024*1024, 16, callQuicksortm, foursort, 
 		 compareIntVal, compareIntVal);
 } // end compare00QxAgainstFourSort
 
 void compare00LQAgainstFourSort() {
-  // void callLQ(), foursort();
-  void callLQ();
+  void callLQ(), foursort();
   compareZeros00("compare00LQAgainstFoursort", 
 		 1024*1024, 16, callLQ, foursort, 
 		 compareIntVal2, compareIntVal);
 } // end compare00LQAgainstFourSort
 
 void compare00BentleyAgainstFourSort() {
-  // void callBentley(), foursort();
-  void callBentley();
+  void callBentley(), foursort();
   compareZeros00("compare00BentleyAgainstFoursort", 
 		 // 1024*1024, 16, 
 		 1024*1024*16, 2, 
@@ -1579,8 +1549,7 @@ void compare00BentleyAgainstFourSort() {
 } // end compare00BentleyAgainstFourSort
 
 void compare00ChenAgainstFourSort() {
-  // void callChensort(), foursort();
-  void callChensort();
+  void callChensort(), foursort();
   compareZeros00("compare00ChenAgainstFoursort", 
 		 1024*1024, 16, callChensort, foursort, 
 		 compareIntVal2, compareIntVal);
@@ -1613,7 +1582,7 @@ void compare00ChenAgainstFourSort() {
 
 #include <alloca.h>
 #include <limits.h>
-// #include <stdlib.h>
+#include <stdlib.h>
 #include <string.h>
 
 /* Byte-wise swap two items of size SIZE. */
@@ -1859,8 +1828,8 @@ void callLQ(void **A, int size, int (*compar ) () ) {
 // From: http://www.gtoal.com/languages/bcpl/BCPL/bcplprogs/sort/AdoSymmetryPSort.cpp
 
 // #include <conio.h>
-// #include <stdlib.h>
-// #include <stdio.h>
+#include <stdlib.h>
+#include <stdio.h>
 // #include <dos.h>
 #define SIZE_n 45
 #define ItemType int

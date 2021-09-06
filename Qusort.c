@@ -3,21 +3,13 @@
 // Fri Nov 27 20:13:42 2020
 // (C) OntoOO/ Dennis de Champeaux
 
+/*
+#include "Hsort.c"
+#include "Dsort.c"
+#include "Isort.c"
+*/
 
-#ifndef isort
-#define isort 1
-#include "Isort.h"
-#endif
-#ifndef hsort
-#define hsort 1
-#include "Hsort.h"
-#endif
-#ifndef dsort
-#define dsort 1
-#include "Dsort.h"
-#endif
-
-void quicksort0c(void **, int, int, int, int (*)(const void*, const void*));
+static void quicksort0c(void **, int, int, int, int (*)(const void*, const void*));
 
 // calculate the median of 3
 static int medq0(void **A, int a, int b, int c,

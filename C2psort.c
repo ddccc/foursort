@@ -2,10 +2,9 @@
 // Date: Fri Jan 31 13:32:12 2014, 2017 Sun Mar 03 16:14:28 2019
 // (C) OntoOO/ Dennis de Champeaux
 
-const int cut2pLimit =  1150; 
+static const int cut2pLimit =  1150; 
 
-void cut2pc();
-void cut2c();
+static void cut2pc();
 // cut2 is used as a best in class quicksort implementation 
 // with a defense against quadratic behavior due to duplicates
 // cut2 is a support function to call up the workhorse cut2c
