@@ -99,7 +99,7 @@ void cut2pc(void **A, int lo, int hi, int depthLimit, int (*compareXY)()) {
 
     // assemble the mini array [lo1, hi1]
     for (k = 0; k < probeLng; k++) // iswap(lo1 + k, lo + k * offset, A);
-      { int xx = lo1 + k, yy = lo + k * offset; iswap(xX1x, yy, A); }
+      { int xx = lo1 + k, yy = lo + k * offset; iswap(xx, yy, A); }
     // sort this mini array to obtain good pivots
     // quicksort0c(A, lo1, hi1, depthLimit, compareXY);
     cut2c(A, lo1, hi1, depthLimit, compareXY);
