@@ -1,8 +1,8 @@
 // c:/bsd/rigel/sort/C2psort.c
-// Date: Fri Jan 31 13:32:12 2014, 2017 Sun Mar 03 16:14:28 2019
+// Date: Fri Jan 31 13:32:12 2014, 2017 Sun Mar 03 16:14:28 2019, Sat Jul 23 13:05:12 2022
 // (C) OntoOO/ Dennis de Champeaux
 
-static const int cut2pLimit =  1150; 
+static const int cut2pLimit =  3000; 
 
 static void cut2pc();
 // cut2 is used as a best in class quicksort implementation 
@@ -38,18 +38,18 @@ void cut2pc(void **A, int lo, int hi, int depthLimit, int (*compareXY)()) {
   }
   depthLimit--;
 
-   register void *T; // pivot
+  register void *T; // pivot
   register int I = lo, J = hi; // indices
   int middlex = lo + (L>>1); // lo + L/2
   void *middle;
   // const int small = 4200; // 4.08673e+08 clocktime 30403
   // const int small = 3700; // 4.08484e+08 clocktime 30193
   // const int small = 3300; // 4.08397e+08 clocktime 30018
-  const int small = 3200; // 4.08377e+08 clocktime 30003
+  // const int small = 3200; // 4.08377e+08 clocktime 30003
   // const int small = 3100; // 4.08361e+08 clocktime 30012
   // const int small = 3000; // 4.08343e+08 clocktime 30043
   // const int small = 2800; // 4.08318e+08 clocktime 30147
-
+  /*
   if ( L < small ) { // use 5 elements for sampling
         int sixth = (L + 1) / 6;
         int e1 = lo  + sixth;
@@ -86,11 +86,11 @@ void cut2pc(void **A, int lo, int hi, int depthLimit, int (*compareXY)()) {
 	iswap(lo, e3, A);
 	T = A[lo];
   } else { // small <= L
-
+  */
     int k, lo1, hi1; // for sampling
     // int middlex = lo + (L>>1); // lo + L/2
 
-    int probeLng = sqrt(L/9);
+    int probeLng = sqrt(L/6);
     int halfSegmentLng = probeLng >> 1; // probeLng/2;
     int quartSegmentLng = probeLng >> 2; // probeLng/4;
     lo1 = middlex - halfSegmentLng; //  lo + (L>>1) - halfSegmentLng;
@@ -99,20 +99,8 @@ void cut2pc(void **A, int lo, int hi, int depthLimit, int (*compareXY)()) {
 
     // assemble the mini array [lo1, hi1]
     for (k = 0; k < probeLng; k++) // iswap(lo1 + k, lo + k * offset, A);
-      { int xx = lo1 + k, yy = lo + k * offset; iswap(xx, yy, A); }
+      { int xx = lo1 + k, yy = lo + k * offset; iswap(xX1x, yy, A); }
     // sort this mini array to obtain good pivots
-    /*
-    if ( probeLng < 120 ) quicksort0c(A, lo1, hi1, depthLimit, compareXY); else {
-      // protect against constant arrays
-      int p0 = lo1 + (probeLng>>1);
-      int pn = lo1, pm = hi1, d = (probeLng-3)>>3;
-      pn = med(A, pn, pn + d, pn + 2 * d, compareXY);
-      p0 = med(A, p0 - d, p0, p0 + d, compareXY);
-      pm = med(A, pm - 2 * d, pm - d, pm, compareXY);
-      p0 = med(A, pn, p0, pm, compareXY);
-      dflgm(A, lo1, hi1, p0, quicksort0c, depthLimit, compareXY);
-    }
-    */
     // quicksort0c(A, lo1, hi1, depthLimit, compareXY);
     cut2c(A, lo1, hi1, depthLimit, compareXY);
     T = middle = A[middlex];
@@ -124,14 +112,14 @@ void cut2pc(void **A, int lo, int hi, int depthLimit, int (*compareXY)()) {
       return;
     }
     for ( k = lo1; k <= middlex; k++ ) {
-    iswap(k, I, A); I++;
+      iswap(k, I, A); I++;
     }
     I--;
     for ( k = hi1; middlex < k; k--) {
       iswap(k, J, A); J--;
     }
     J++;
-  }
+    // }
   
   register void *AI, *AJ; // array values
 	// The left segment has elements <= T
